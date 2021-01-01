@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.17)
+project(Implementation_of_a_few_interesting_algorithms)
+
+set(CMAKE_CXX_STANDARD 14)
+
+add_executable(Implementation_of_a_few_interesting_algorithms main.cpp)

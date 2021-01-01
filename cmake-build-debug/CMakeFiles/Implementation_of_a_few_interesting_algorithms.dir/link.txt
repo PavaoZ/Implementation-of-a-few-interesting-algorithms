@@ -1,0 +1,1 @@
+/usr/bin/c++.exe -g  -Wl,--enable-auto-import CMakeFiles/Implementation_of_a_few_interesting_algorithms.dir/main.cpp.o  -o Implementation_of_a_few_interesting_algorithms.exe -Wl,--out-implib,libImplementation_of_a_few_interesting_algorithms.dll.a -Wl,--major-image-version,0,--minor-image-version,0 
