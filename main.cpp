@@ -143,35 +143,35 @@ public:
 
     // Rotating left
     void leftRotate(NodePointer x) {
-        NodePointer y = x->right; // set y
-        x->right = y->left; // turn y's subtree into x's right subtree
+        NodePointer y = x->right;
+        x->right = y->left;
         if (y->left != T_nill)
             y->left->parent = x;
-        y->parent = x->parent; // link x's parent to y
+        y->parent = x->parent;
         if (x->parent == nullptr)
             this->root = y;
         else if (x == x->parent->left)
             x->parent->left = y;
         else
             x->parent->right = y;
-        y->left = x; // put x on y's left
+        y->left = x;
         x->parent = y;
     }
 
     // Rotating right
     void rightRotate(NodePointer x) {
-        NodePointer y = x->left; // set y
-        x->left = y->right; // turn y's subtree into x's left subtree
+        NodePointer y = x->left;
+        x->left = y->right;
         if (y->right != T_nill)
             y->right->parent = x;
-        y->parent = x->parent; // link x's parent to y
+        y->parent = x->parent;
         if (x->parent == nullptr)
             this->root = y;
         else if (x == x->parent->right)
             x->parent->right = y;
         else
             x->parent->left = y;
-        y->right = x; // put x on y's right
+        y->right = x;
         x->parent = y;
     }
 
@@ -195,7 +195,6 @@ public:
                 x = x->right;
         }
 
-        // y is parent of x
         node->parent = y;
         if (y == nullptr)
             root = node;
@@ -204,20 +203,17 @@ public:
         else
             y->right = node;
 
-        // if new node is a root node, simply return
         if (node->parent == nullptr) {
             node->color = 0;
             return;
         }
 
-        // if the grandparent is null, simply return
         if (node->parent->parent == nullptr) return;
 
-        // Fixing the tree after insert
         RBInsertFixUp(node);
     }
 
-    // transplant
+    // Transplant
     void RBTransplant(NodePointer u, NodePointer v) {
         if (u->parent == nullptr)
             this->root = v;
@@ -229,7 +225,7 @@ public:
         v->parent = u->parent;
     }
 
-    // delete node
+    // Delete node
     void RBDelete(int key) {
         NodePointer x, y, z = T_nill;
         NodePointer root_copy = this->root;
