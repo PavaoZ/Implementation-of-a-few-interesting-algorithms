@@ -3,226 +3,147 @@
 using namespace std;
 
 struct Node {
-    int key; // holds the key
-    Node *parent; // pointer to the parent
-    Node *left; // pointer to left child
-    Node *right; // pointer to right child
-    // moze ili int ili char
-    char color; // 1 -> Red, 0 -> Black
+    int key;
+    Node *parent;
+    Node *left;
+    Node *right;
+    char color; // 0 is black, 1 is red
 };
 
-typedef Node *NodePtr;
+typedef Node *NodePointer;
 
 class RBStablo {
 private:
-    NodePtr root;
-    NodePtr T_nill;
+    NodePointer root;
+    NodePointer T_nill;
 
-    // initializes the nodes with appropriate values
-    // all the pointers are set to point to the null pointer
-    void initializeNULLNode(NodePtr node, NodePtr parent) {
-        node->key = 0;
-        node->parent = parent;
-        node->left = nullptr;
-        node->right = nullptr;
-        node->color = 0;
-    }
-
-    void preOrderHelper(NodePtr node) {
-        if (node != T_nill) {
-            cout<<node->key<<" ";
-            preOrderHelper(node->left);
-            preOrderHelper(node->right);
-        }
-    }
-
-    void inOrderHelper(NodePtr node) {
+    void inOrderHelper(NodePointer node) {
         if (node != T_nill) {
             inOrderHelper(node->left);
-            cout<<node->key<<" ";
+            cout << node->key << " ";
             inOrderHelper(node->right);
         }
     }
 
-    void postOrderHelper(NodePtr node) {
-        if (node != T_nill) {
-            postOrderHelper(node->left);
-            postOrderHelper(node->right);
-            cout<<node->key<<" ";
-        }
-    }
-
-    NodePtr searchTreeHelper(NodePtr node, int key) {
-        if (node == T_nill || key == node->key) {
-            return node;
-        }
-
-        if (key < node->key) {
-            return searchTreeHelper(node->left, key);
-        }
-        return searchTreeHelper(node->right, key);
-    }
-
     // fix the red-black tree
-    void fixInsert(NodePtr k){
-        NodePtr u;
-        while (k->parent->color == 1) {
-            if (k->parent == k->parent->parent->right) {
-                u = k->parent->parent->left; // uncle
-                if (u->color == 1) {
-                    // case 3.1
-                    u->color = 0;
-                    k->parent->color = 0;
-                    k->parent->parent->color = 1;
-                    k = k->parent->parent;
+    void RBInsertFixUp(NodePointer z){
+        NodePointer temp;
+        while (z->parent->color == 1) {
+            if (z->parent == z->parent->parent->right) {
+                temp = z->parent->parent->left;
+                if (temp->color == 1) {
+                    temp->color = 0; // Case 1
+                    z->parent->color = 0; // Case 1
+                    z->parent->parent->color = 1; // Case 1
+                    z = z->parent->parent; // Case 1
                 } else {
-                    if (k == k->parent->left) {
-                        // case 3.2.2
-                        k = k->parent;
-                        rightRotate(k);
+                    if (z == z->parent->left) {
+                        z = z->parent; // Case 2
+                        rightRotate(z); // Case 2
                     }
-                    // case 3.2.1
-                    k->parent->color = 0;
-                    k->parent->parent->color = 1;
-                    leftRotate(k->parent->parent);
+                    z->parent->color = 0; // Case 3
+                    z->parent->parent->color = 1; // Case 3
+                    leftRotate(z->parent->parent); // Case 3
                 }
             } else {
-                u = k->parent->parent->right; // uncle
+                temp = z->parent->parent->right;
 
-                if (u->color == 1) {
-                    // mirror case 3.1
-                    u->color = 0;
-                    k->parent->color = 0;
-                    k->parent->parent->color = 1;
-                    k = k->parent->parent;
+                if (temp->color == 1) {
+                    temp->color = 0; // Else case 1
+                    z->parent->color = 0; // Else case 1
+                    z->parent->parent->color = 1; // Else case 1
+                    z = z->parent->parent; // Else case 1
                 } else {
-                    if (k == k->parent->right) {
-                        // mirror case 3.2.2
-                        k = k->parent;
-                        leftRotate(k);
+                    if (z == z->parent->right) {
+                        z = z->parent; // Else case 2
+                        leftRotate(z); // Else case 2
                     }
-                    // mirror case 3.2.1
-                    k->parent->color = 0;
-                    k->parent->parent->color = 1;
-                    rightRotate(k->parent->parent);
+                    z->parent->color = 0; // Else case 3
+                    z->parent->parent->color = 1; // Else case 3
+                    rightRotate(z->parent->parent); // Else case 3
                 }
             }
-            if (k == root) {
-                break;
-            }
+            if (z == root) break;
         }
         root->color = 0;
     }
 
-    void printHelper(NodePtr root, string indent, bool last) {
-        // print the tree structure on the screen
-        if (root != T_nill) {
-            cout<<indent;
-            if (last) {
-                cout<<"R----";
-                indent += "     ";
+    // Fixing the RBStablo after delete
+    void RBDeleteFixup(NodePointer x) {
+        NodePointer w;
+        while (x != this->root && x->color == 0) {
+            if (x == x->parent->left) {
+                w = x->parent->right;
+                if (w->color == 1) {
+                    w->color = 0; // Case 1
+                    x->parent->color = 1; // Case 1
+                    leftRotate(x->parent); // Case 1
+                    w = x->parent->right; // Case 1
+                }
+
+                if (w->left->color == 0 && w->right->color == 0) {
+                    w->color = 1; // Case 2
+                    x = x->parent; // Case 2
+                } else {
+                    if (w->right->color == 0) {
+                        w->left->color = 0;// Case 3
+                        w->color = 1; // Case 3
+                        rightRotate(w); // Case 3
+                        w = x->parent->right; // Case 3
+                    }
+
+                    w->color = x->parent->color; // Case 4
+                    x->parent->color = 0; // Case 4
+                    w->right->color = 0; // Case 4
+                    leftRotate(x->parent); // Case 4
+                    x = this->root; // Case 4
+                }
             } else {
-                cout<<"L----";
-                indent += "|    ";
+                w = x->parent->left;
+                if (w->color == 1) {
+                    w->color = 0; // Else case 1
+                    x->parent->color = 1; // Else case 1
+                    rightRotate(x->parent); // Else case 1
+                    w = x->parent->left; // Else case 1
+                }
+
+                if (w->right->color == 0 && w->left->color == 0) {
+                    w->color = 1; // Else case 2
+                    x = x->parent; // Else case 2
+                } else {
+                    if (w->left->color == 0) {
+                        w->right->color = 0; // Else case 3
+                        w->color = 1; // Else case 3
+                        leftRotate(w); // Else case 3
+                        w = x->parent->left; // Else case 3
+                    }
+
+                    w->color = x->parent->color; // Else case 4
+                    x->parent->color = 0; // Else case 4
+                    w->left->color = 0; // Else case 4
+                    rightRotate(x->parent); // Else case 4
+                    x = this->root; // Else case 4
+                }
             }
-
-            string sColor = root->color?"RED":"BLACK";
-            cout<<root->key<<"("<<sColor<<")"<<endl;
-            printHelper(root->left, indent, false);
-            printHelper(root->right, indent, true);
         }
-        // cout<<root->left->key<<endl;
+        x->color = 0;
     }
-
 public:
     RBStablo() {
-        T_nill = new Node;
-        T_nill->color = 0;
-        T_nill->left = nullptr;
-        T_nill->right = nullptr;
-        root = T_nill;
+        this->T_nill = new Node;
+        this->T_nill->color = 0;
+        this->T_nill->left = nullptr;
+        this->T_nill->right = nullptr;
+        this->root = T_nill;
     }
 
-    // Pre-Order traversal
-    // Node->Left Subtree->Right Subtree
-    void preorder() {
-        preOrderHelper(this->root);
-    }
-
-    // In-Order traversal
-    // Left Subtree -> Node -> Right Subtree
     void inorder() {
         inOrderHelper(this->root);
     }
 
-    // Post-Order traversal
-    // Left Subtree -> Right Subtree -> Node
-    void postorder() {
-        postOrderHelper(this->root);
-    }
-
-    // search the tree for the key k
-    // and return the corresponding node
-    NodePtr searchTree(int k) {
-        return searchTreeHelper(this->root, k);
-    }
-
-    // find the node with the minimum key
-    NodePtr minimum(NodePtr node) {
-        while (node->left != T_nill) {
-            node = node->left;
-        }
-        return node;
-    }
-
-    // find the node with the maximum key
-    NodePtr maximum(NodePtr node) {
-        while (node->right != T_nill) {
-            node = node->right;
-        }
-        return node;
-    }
-
-    // find the successor of a given node
-    NodePtr successor(NodePtr x) {
-        // if the right subtree is not null,
-        // the successor is the leftmost node in the
-        // right subtree
-        if (x->right != T_nill) {
-            return minimum(x->right);
-        }
-
-        // else it is the lowest ancestor of x whose
-        // left child is also an ancestor of x.
-        NodePtr y = x->parent;
-        while (y != T_nill && x == y->right) {
-            x = y;
-            y = y->parent;
-        }
-        return y;
-    }
-
-    // find the predecessor of a given node
-    NodePtr predecessor(NodePtr x) {
-        // if the left subtree is not null,
-        // the predecessor is the rightmost node in the
-        // left subtree
-        if (x->left != T_nill) {
-            return maximum(x->left);
-        }
-
-        NodePtr y = x->parent;
-        while (y != T_nill && x == y->left) {
-            x = y;
-            y = y->parent;
-        }
-
-        return y;
-    }
-
-    // rotating left
-    void leftRotate(NodePtr x) {
-        NodePtr y = x->right; // set y
+    // Rotating left
+    void leftRotate(NodePointer x) {
+        NodePointer y = x->right; // set y
         x->right = y->left; // turn y's subtree into x's right subtree
         if (y->left != T_nill)
             y->left->parent = x;
@@ -237,9 +158,9 @@ public:
         x->parent = y;
     }
 
-    // rotating right
-    void rightRotate(NodePtr x) {
-        NodePtr y = x->left; // set y
+    // Rotating right
+    void rightRotate(NodePointer x) {
+        NodePointer y = x->left; // set y
         x->left = y->right; // turn y's subtree into x's left subtree
         if (y->right != T_nill)
             y->right->parent = x;
@@ -254,126 +175,196 @@ public:
         x->parent = y;
     }
 
-    // insert the key to the tree in its appropriate position
-    // and fix the tree
-    void insert(int key) {
-        // Ordinary Binary Search Insertion
-        NodePtr node = new Node;
+    // Insert node
+    void RBInsert(int key) {
+        auto node = new Node;
         node->parent = nullptr;
         node->key = key;
         node->left = T_nill;
         node->right = T_nill;
-        node->color = 1; // new node must be red
+        node->color = 1; // node must be red
 
-        NodePtr y = nullptr;
-        NodePtr x = this->root;
+        NodePointer y = nullptr;
+        NodePointer x = this->root;
 
         while (x != T_nill) {
             y = x;
-            if (node->key < x->key) {
+            if (node->key < x->key)
                 x = x->left;
-            } else {
+            else
                 x = x->right;
-            }
         }
 
         // y is parent of x
         node->parent = y;
-        if (y == nullptr) {
+        if (y == nullptr)
             root = node;
-        } else if (node->key < y->key) {
+        else if (node->key < y->key)
             y->left = node;
-        } else {
+        else
             y->right = node;
-        }
 
         // if new node is a root node, simply return
-        if (node->parent == nullptr){
+        if (node->parent == nullptr) {
             node->color = 0;
             return;
         }
 
         // if the grandparent is null, simply return
-        if (node->parent->parent == nullptr) {
+        if (node->parent->parent == nullptr) return;
+
+        // Fixing the tree after insert
+        RBInsertFixUp(node);
+    }
+
+    // transplant
+    void RBTransplant(NodePointer u, NodePointer v) {
+        if (u->parent == nullptr)
+            this->root = v;
+        else if (u == u->parent->left)
+            u->parent->left = v;
+        else
+            u->parent->right = v;
+
+        v->parent = u->parent;
+    }
+
+    // delete node
+    void RBDelete(int key) {
+        NodePointer x, y, z = T_nill;
+        NodePointer root_copy = this->root;
+
+        // Because through our program we send in our key of the node we still need to first check if the node is present in the tree at all
+        // Technically we can also send a whole node, to first initialize that node but it is pattern breaking
+        while (root_copy != T_nill) {
+            if (root_copy->key == key)
+                z = root_copy;
+
+            if (root_copy->key <= key)
+                root_copy = root_copy->right;
+            else
+                root_copy = root_copy->left;
+        }
+
+        if (z == T_nill) {
+            cout << "The key isn't present, nothing to delete!" << endl;
             return;
         }
 
-        // Fix the tree
-        fixInsert(node);
-    }
+        y = z;
+        char y_original_color = y->color;
+        if (z->left == T_nill) {
+            x = z->right;
+            RBTransplant(z, z->right);
+        } else if (z->right == T_nill) {
+            x = z->left;
+            RBTransplant(z, z->left);
+        } else {
+            y = tree_minimum(z->right);
+            y_original_color = y->color;
+            x = y->right;
+            if (y->parent == z)
+                x->parent = y;
+            else {
+                RBTransplant(y, y->right);
+                y->right = z->right;
+                y->right->parent = y;
+            }
 
-    NodePtr getRoot(){
-        return this->root;
-    }
-
-    // delete the node from the tree
-//    void deleteNode(int key) {
-//        deleteNodeHelper(this->root, key);
-//    }
-
-    // print the tree structure on the screen
-    void prettyPrint() {
-        if (root) {
-            printHelper(this->root, "", true);
+            RBTransplant(z, y);
+            y->left = z->left;
+            y->left->parent = y;
+            y->color = z->color;
         }
+
+        delete z;
+        if (y_original_color == 0) RBDeleteFixup(x);
+    }
+
+    // find the node with the tree_minimum key
+    NodePointer tree_minimum(NodePointer node) {
+        while (node->left != T_nill) node = node->left;
+        return node;
     }
 };
 
 int main() {
     cout << "Welcome to the RED-BLACK TREE interface menu!" << endl;
     cout << "You will be given different commands that you can choose and perform different actions on the tree!" << endl;
-    // Menu options and tree
-    int menu_option = 0;
-    string menu_options[3] = {"Node insertion!", "INORDER output!", "EXIT"};
+
+    // Menu options, tree and node for insertion and deletion
+    int menu_option = 0, node_number = 0;
+    string menu_options[4] = {"Node insertion!", "Inorder output!", "Delete node", "EXIT"};
     RBStablo red_black_tree;
 
-    cout << "If you want the tree to have an initial structure of elements [6, 11, 10, 2, 9, 7, 5, 13, 22, 27, 36, 12, 31] type in 1 or anything else to omit starting input!" << endl;
+    cout << "If you want the tree to have an initial structure of nodes [6, 11, 10, 2, 9, 7, 5, 13, 22, 27, 36, 12, 31] type in 1 or type in anything else to omit starting input!" << endl;
     cout << "Input: ";
     cin >> menu_option;
     if(menu_option == 1) {
         // Starting tree input
-        red_black_tree.insert(6);
-        red_black_tree.insert(11);
-        red_black_tree.insert(10);
-        red_black_tree.insert(2);
-        red_black_tree.insert(9);
-        red_black_tree.insert(7);
-        red_black_tree.insert(5);
-        red_black_tree.insert(13);
-        red_black_tree.insert(22);
-        red_black_tree.insert(27);
-        red_black_tree.insert(36);
-        red_black_tree.insert(12);
-        red_black_tree.insert(31);
+        red_black_tree.RBInsert(6);
+        red_black_tree.RBInsert(11);
+        red_black_tree.RBInsert(10);
+        red_black_tree.RBInsert(2);
+        red_black_tree.RBInsert(9);
+        red_black_tree.RBInsert(7);
+        red_black_tree.RBInsert(5);
+        red_black_tree.RBInsert(13);
+        red_black_tree.RBInsert(22);
+        red_black_tree.RBInsert(27);
+        red_black_tree.RBInsert(36);
+        red_black_tree.RBInsert(12);
+        red_black_tree.RBInsert(31);
+    }
+
+    // Possible only if you put in the initial nodes
+    if(menu_option == 1) {
+        cout << "If you want to have a standard deletion of nodes [5, 27, 36, 12, 11] type in 1 or type in anything else to omit starting deletion!" << endl;
+        cout << "Input: ";
+        menu_option = 0;
+        cin >> menu_option;
+        if(menu_option == 1) {
+            // Starting tree input
+            red_black_tree.RBDelete(5);
+            red_black_tree.RBDelete(27);
+            red_black_tree.RBDelete(36);
+            red_black_tree.RBDelete(12);
+            red_black_tree.RBDelete(11);
+        }
     }
 
     // Menu selection
     do {
-        cout << "Menu:" << endl;
-        for(int i = 0; i < 3; ++i)
+        cout << endl << "Menu:" << endl;
+        for(int i = 0; i < 4; ++i)
             cout << i+1 << ". " << menu_options[i] << endl;
         cin >> menu_option;
         switch(menu_option) {
             case 1:
                 cout << "You have chosen node insertion!" << endl;
-                int node_number;
                 cout << "Type in a key to insert" << endl;
                 cin >> node_number;
                 cout << "You have chosen " << node_number << "!" << endl;
-                red_black_tree.insert(node_number);
+                red_black_tree.RBInsert(node_number);
                 break;
             case 2:
                 cout << "You have chosen inorder print out!" << endl;
+                red_black_tree.inorder();
                 break;
             case 3:
+                cout << "You have chosen deleting a node!" << endl;
+                cout << "Type in a key to delete" << endl;
+                cin >> node_number;
+                cout << "You have chosen " << node_number << "!" << endl;
+                red_black_tree.RBDelete(node_number);
+                break;
+            case 4:
                 cout << "Hope you had fun!" << endl;
                 break;
             default:
                 cout << "That command is not present! Please type in different command!" << endl;
         }
-    } while(menu_option != 0);
-//    RBStablo bst;
-//    bst.deleteNode(25);
-//    bst.prettyPrint();
+    } while(menu_option != 4);
+
     return 0;
 }
