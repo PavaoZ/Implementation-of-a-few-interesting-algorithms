@@ -1,366 +1,335 @@
 #include <iostream>
+#include <cmath>
+#include <cstdlib>
 
 using namespace std;
 
-struct Node {
-    int key;
-    Node *parent;
-    Node *left;
-    Node *right;
-    char color; // 0 is black, 1 is red
+struct Node
+{
+    int key; // Node value
+    int degree; // Shows number of children of this node
+    Node *parent; // Pointer to parent node
+    Node *child; // Pointer to child node
+    Node *left; // Pointer to left brother
+    Node *right; // Pointer to right brother
+    char mark; // Mark that shows if node has lost child node from the moment that node has become the node of some different node
+    char C; // Flag for assisting with the find node function
 };
 
 typedef Node *NodePointer;
 
-class RBStablo {
+class FIBHeap {
 private:
-    NodePointer root;
-    NodePointer T_nill;
+    int numberOfNodes; // Number of nodes
+    NodePointer H;
 
-    void inOrderHelper(NodePointer node) {
-        if (node != T_nill) {
-            inOrderHelper(node->left);
-            cout << node->key << " ";
-            inOrderHelper(node->right);
-        }
-    }
-
-    // fix the red-black tree
-    void RBInsertFixUp(NodePointer z){
-        NodePointer temp;
-        while (z->parent->color == 1) {
-            if (z->parent == z->parent->parent->right) {
-                temp = z->parent->parent->left;
-                if (temp->color == 1) {
-                    temp->color = 0; // Case 1
-                    z->parent->color = 0; // Case 1
-                    z->parent->parent->color = 1; // Case 1
-                    z = z->parent->parent; // Case 1
-                } else {
-                    if (z == z->parent->left) {
-                        z = z->parent; // Case 2
-                        rightRotate(z); // Case 2
-                    }
-                    z->parent->color = 0; // Case 3
-                    z->parent->parent->color = 1; // Case 3
-                    leftRotate(z->parent->parent); // Case 3
-                }
-            } else {
-                temp = z->parent->parent->right;
-
-                if (temp->color == 1) {
-                    temp->color = 0; // Else case 1
-                    z->parent->color = 0; // Else case 1
-                    z->parent->parent->color = 1; // Else case 1
-                    z = z->parent->parent; // Else case 1
-                } else {
-                    if (z == z->parent->right) {
-                        z = z->parent; // Else case 2
-                        leftRotate(z); // Else case 2
-                    }
-                    z->parent->color = 0; // Else case 3
-                    z->parent->parent->color = 1; // Else case 3
-                    rightRotate(z->parent->parent); // Else case 3
-                }
-            }
-            if (z == root) break;
-        }
-        root->color = 0;
-    }
-
-    // Fixing the RBStablo after delete
-    void RBDeleteFixup(NodePointer x) {
-        NodePointer w;
-        while (x != this->root && x->color == 0) {
-            if (x == x->parent->left) {
-                w = x->parent->right;
-                if (w->color == 1) {
-                    w->color = 0; // Case 1
-                    x->parent->color = 1; // Case 1
-                    leftRotate(x->parent); // Case 1
-                    w = x->parent->right; // Case 1
-                }
-
-                if (w->left->color == 0 && w->right->color == 0) {
-                    w->color = 1; // Case 2
-                    x = x->parent; // Case 2
-                } else {
-                    if (w->right->color == 0) {
-                        w->left->color = 0;// Case 3
-                        w->color = 1; // Case 3
-                        rightRotate(w); // Case 3
-                        w = x->parent->right; // Case 3
-                    }
-
-                    w->color = x->parent->color; // Case 4
-                    x->parent->color = 0; // Case 4
-                    w->right->color = 0; // Case 4
-                    leftRotate(x->parent); // Case 4
-                    x = this->root; // Case 4
-                }
-            } else {
-                w = x->parent->left;
-                if (w->color == 1) {
-                    w->color = 0; // Else case 1
-                    x->parent->color = 1; // Else case 1
-                    rightRotate(x->parent); // Else case 1
-                    w = x->parent->left; // Else case 1
-                }
-
-                if (w->right->color == 0 && w->left->color == 0) {
-                    w->color = 1; // Else case 2
-                    x = x->parent; // Else case 2
-                } else {
-                    if (w->left->color == 0) {
-                        w->right->color = 0; // Else case 3
-                        w->color = 1; // Else case 3
-                        leftRotate(w); // Else case 3
-                        w = x->parent->left; // Else case 3
-                    }
-
-                    w->color = x->parent->color; // Else case 4
-                    x->parent->color = 0; // Else case 4
-                    w->left->color = 0; // Else case 4
-                    rightRotate(x->parent); // Else case 4
-                    x = this->root; // Else case 4
-                }
-            }
-        }
-        x->color = 0;
+    NodePointer MakeFIBHeap() {
+        this->numberOfNodes = 0;
+        return nullptr;
+        // I think we don't need this at all
+        // NodePointer min_node_pointer = nullptr;
+        // return min_node_pointer;
     }
 public:
-    RBStablo() {
-        this->T_nill = new Node;
-        this->T_nill->color = 0;
-        this->T_nill->left = nullptr;
-        this->T_nill->right = nullptr;
-        this->root = T_nill;
+    FIBHeap() {
+        this->H = MakeFIBHeap();
     }
 
-    void inorder() {
-        inOrderHelper(this->root);
+    int fibHeapLink(NodePointer H1, NodePointer y, NodePointer z) {
+        y->left->right = y->right;
+        y->right->left = y->left;
+        if (z->right == z)
+            H1 = z;
+        y->left = y;
+        y->right = y;
+        y->parent = z;
+        if (z->child == nullptr)
+            z->child = y;
+        y->right = z->child;
+        y->left = z->child->left;
+        z->child->left->right = y;
+        z->child->left = y;
+        if (y->key < z->child->key)
+            z->child = y;
+        z->degree++;
     }
 
-    // Rotating left
-    void leftRotate(NodePointer x) {
-        NodePointer y = x->right;
-        x->right = y->left;
-        if (y->left != T_nill)
-            y->left->parent = x;
-        y->parent = x->parent;
-        if (x->parent == nullptr)
-            this->root = y;
-        else if (x == x->parent->left)
-            x->parent->left = y;
-        else
-            x->parent->right = y;
-        y->left = x;
-        x->parent = y;
+    NodePointer Create_Node(int value) {
+        NodePointer x = new Node;
+        x->key = value;
+        return x;
     }
 
-    // Rotating right
-    void rightRotate(NodePointer x) {
-        NodePointer y = x->left;
-        x->left = y->right;
-        if (y->right != T_nill)
-            y->right->parent = x;
-        y->parent = x->parent;
-        if (x->parent == nullptr)
-            this->root = y;
-        else if (x == x->parent->right)
-            x->parent->right = y;
-        else
-            x->parent->left = y;
-        y->right = x;
-        x->parent = y;
+    // I think we can change this a bit to:
+    NodePointer FIBHeapInsert(NodePointer x) {
+        x->degree = 0;
+        x->parent = nullptr;
+        x->child = nullptr;
+        x->mark = 'F';
+        if(this->H == nullptr)
+            this->H = x;
+        else {
+            // This represents adding the element to the list of roots and becomes the left sibling of the root
+            H->left->right = x;
+            x->right = H;
+            x->left = H->left;
+            H->left = x;
+            if(x->key < this->H->key) this->H = x;
+        }
+        this->numberOfNodes++;
+    }
+//    NodePointer FIBHeapInsert(NodePointer H, NodePointer x) {
+//        x->degree = 0;
+//        x->parent = nullptr;
+//        x->child = nullptr;
+//        x->left = x;
+//        x->right = x;
+//        x->mark = 'F';
+//        x->C = 'N';
+//        if (H != nullptr) {
+//            H->left->right = x;
+//            x->right = H;
+//            x->left = H->left;
+//            H->left = x;
+//            if (x->key < H->key)
+//                H = x;
+//        }
+//        else
+//        {
+//            H = x;
+//        }
+//        numberOfNodes = numberOfNodes + 1;
+//        return H;
+//    }
+
+    NodePointer FIBHeapUnion(NodePointer H1, NodePointer H2) {
+        NodePointer temp;
+        NodePointer H = MakeFIBHeap();
+        // We essentially create a new Fibonacci heap that is a mix between the two heaps and essentially a new root list
+        // These are the minimum nodes, or better said the roots
+        H = H1;
+        H->left->right = H2;
+        H2->left->right = H;
+        temp = H->left;
+        H->left = H2->left;
+        H2->left = temp;
+        return H;
     }
 
-    // Insert node
-    void RBInsert(int key) {
-        auto node = new Node;
-        node->parent = nullptr;
-        node->key = key;
-        node->left = T_nill;
-        node->right = T_nill;
-        node->color = 1; // node must be red
+    NodePointer FIBHeapExtractMin(NodePointer H_min) {
+        // H1 is the heap we are extracting from
+        NodePointer p, x = nullptr, temp2, temp, z = H_min;
+        p = z;
+        temp2 = z;
+        if (z == nullptr) return z;
 
-        NodePointer y = nullptr;
-        NodePointer x = this->root;
+        // We set the initial value of x and we don't need this
+        // x = nullptr;
+        // We initialize the first child because we need to go through all the children x of z, with a check of nullptr
+        if (z->child != nullptr) x = z->child;
 
-        while (x != T_nill) {
-            y = x;
-            if (node->key < x->key)
-                x = x->left;
-            else
-                x = x->right;
+        if(x != nullptr) {
+            temp2 = x;
+            do {
+                temp = x->right;
+                H_min->left->right = x;
+                x->right = H_min;
+                x->left = H_min->left;
+                H_min->left = x;
+                if (x->key < H_min->key)
+                    H_min = x;
+                x->parent = nullptr;
+                x = temp;
+            } while (temp != temp2);
         }
 
-        node->parent = y;
-        if (y == nullptr)
-            root = node;
-        else if (node->key < y->key)
-            y->left = node;
-        else
-            y->right = node;
-
-        if (node->parent == nullptr) {
-            node->color = 0;
-            return;
+        z->left->right = z->right;
+        z->right->left = z->left;
+        H_min = z->right;
+        if (z == z->right && z->child == nullptr)
+            this->H = nullptr;
+        else {
+            H_min = z->right;
+            Consolidate(H_min);
         }
 
-        if (node->parent->parent == nullptr) return;
-
-        RBInsertFixUp(node);
+        this->numberOfNodes--;
+        return p;
     }
 
-    // Transplant
-    void RBTransplant(NodePointer u, NodePointer v) {
-        if (u->parent == nullptr)
-            this->root = v;
-        else if (u == u->parent->left)
-            u->parent->left = v;
-        else
-            u->parent->right = v;
+    int Consolidate(NodePointer H_min) {
+        int d, i;
+        float f = (log(this->numberOfNodes)) / (log(2));
+        int D = f;
+        NodePointer A[D];
+        for (i = 0; i <= D; i++) A[i] = nullptr;
+        NodePointer x = H_min;
+        NodePointer y, temp;
+        NodePointer pt = x;
+        do {
+            pt = pt->right;
+            d = x->degree;
+            while (A[d] != nullptr) {
+                y = A[d];
+                if (x->key > y->key) {
+                    temp = x;
+                    x = y;
+                    y = temp;
+                }
 
-        v->parent = u->parent;
-    }
-
-    // Delete node
-    void RBDelete(int key) {
-        NodePointer x, y, z = T_nill;
-        NodePointer root_copy = this->root;
-
-        // Because through our program we send in our key of the node we still need to first check if the node is present in the tree at all
-        // Technically we can also send a whole node, to first initialize that node but it is pattern breaking
-        while (root_copy != T_nill) {
-            if (root_copy->key == key)
-                z = root_copy;
-
-            if (root_copy->key <= key)
-                root_copy = root_copy->right;
-            else
-                root_copy = root_copy->left;
-        }
-
-        if (z == T_nill) {
-            cout << "The key isn't present, nothing to delete!" << endl;
-            return;
-        }
-
-        y = z;
-        char y_original_color = y->color;
-        if (z->left == T_nill) {
-            x = z->right;
-            RBTransplant(z, z->right);
-        } else if (z->right == T_nill) {
-            x = z->left;
-            RBTransplant(z, z->left);
-        } else {
-            y = tree_minimum(z->right);
-            y_original_color = y->color;
-            x = y->right;
-            if (y->parent == z)
-                x->parent = y;
-            else {
-                RBTransplant(y, y->right);
-                y->right = z->right;
-                y->right->parent = y;
+                if (y == H_min) H_min = x;
+                fibHeapLink(H_min, y, x);
+                if (x->right == x) H_min = x;
+                A[d] = nullptr;
+                d++;
             }
+            A[d] = x;
+            x = x->right;
+        } while (x != H_min);
 
-            RBTransplant(z, y);
-            y->left = z->left;
-            y->left->parent = y;
-            y->color = z->color;
+        this->H = nullptr;
+
+        for (int j = 0; j <= D; j++) {
+            if (A[j] != nullptr) {
+                A[j]->left = A[j];
+                A[j]->right =A[j];
+                if (this->H != nullptr) {
+                    (this->H->left)->right = A[j];
+                    A[j]->right = this->H;
+                    A[j]->left = this->H->left;
+                    this->H->left = A[j];
+                    if (A[j]->key < this->H->key) this->H = A[j];
+                } else this->H = A[j];
+                if(this->H == nullptr)
+                    this->H = A[j];
+                else if (A[j]->key < this->H->key)
+                    this->H = A[j];
+            }
         }
-
-        delete z;
-        if (y_original_color == 0) RBDeleteFixup(x);
     }
 
-    // find the node with the tree_minimum key
-    NodePointer tree_minimum(NodePointer node) {
-        while (node->left != T_nill) node = node->left;
-        return node;
+    int Display(NodePointer H) {
+        NodePointer p = H;
+        if (p == NULL)
+        {
+            cout<<"The Heap is Empty"<<endl;
+            return 0;
+        }
+        cout<<"The root Nodes of Heap are: "<<endl;
+        do
+        {
+            cout<<p->key;
+            p = p->right;
+            if (p != H)
+            {
+                cout<<"-->";
+            }
+        }
+        while (p != H && p->right != NULL);
+        cout<<endl;
+    }
+
+    NodePointer Find(NodePointer H, int k) {
+        NodePointer x = H;
+        x->C = 'Y';
+        NodePointer p = NULL;
+        if (x->key == k)
+        {
+            p = x;
+            x->C = 'N';
+            return p;
+        }
+        if (p == NULL)
+        {
+            if (x->child != NULL )
+                p = Find(x->child, k);
+            if ((x->right)->C != 'Y' )
+                p = Find(x->right, k);
+        }
+        x->C = 'N';
+        return p;
+    }
+
+    int FIBHeapDecreaseKey(NodePointer H1, int x, int k) {
+        NodePointer y;
+        if (H1 == NULL)
+        {
+            cout<<"The Heap is Empty"<<endl;
+            return 0;
+        }
+        NodePointer ptr = Find(H1, x);
+        if (ptr == NULL)
+        {
+            cout<<"Node not found in the Heap"<<endl;
+            return 1;
+        }
+        if (ptr->key < k)
+        {
+            cout<<"Entered key greater than current key"<<endl;
+            return 0;
+        }
+        ptr->key = k;
+        y = ptr->parent;
+        if (y != NULL && ptr->key < y->key)
+        {
+            Cut(H1, ptr, y);
+            Cascading_cut(H1, y);
+        }
+        if (ptr->key < H->key)
+            H = ptr;
+        return 0;
+    }
+    int FIBHeapDelete(NodePointer H1, int k) {
+        NodePointer np = NULL;
+        int t;
+        t = FIBHeapDecreaseKey(H1, k, -5000);
+        if (!t)
+            np = FIBHeapExtractMin(H);
+        if (np != NULL)
+            cout<<"Key Deleted"<<endl;
+        else
+            cout<<"Key not Deleted"<<endl;
+        return 0;
+    }
+
+    int Cut(NodePointer H1, NodePointer x, NodePointer y) {
+        if (x == x->right)
+            y->child = NULL;
+        (x->left)->right = x->right;
+        (x->right)->left = x->left;
+        if (x == y->child)
+            y->child = x->right;
+        y->degree = y->degree - 1;
+        x->right = x;
+        x->left = x;
+        (H1->left)->right = x;
+        x->right = H1;
+        x->left = H1->left;
+        H1->left = x;
+        x->parent = NULL;
+        x->mark = 'F';
+    }
+    int Cascading_cut(NodePointer H1, NodePointer y) {
+        NodePointer z = y->parent;
+        if (z != NULL)
+        {
+            if (y->mark == 'F')
+            {
+                y->mark = 'T';
+            }
+            else
+            {
+                Cut(H1, y, z);
+                Cascading_cut(H1, z);
+            }
+        }
     }
 };
 
-int main() {
-    cout << "Welcome to the RED-BLACK TREE interface menu!" << endl;
-    cout << "You will be given different commands that you can choose and perform different actions on the tree!" << endl;
-
-    // Menu options, tree and node for insertion and deletion
-    int menu_option = 0, node_number = 0;
-    string menu_options[4] = {"Node insertion!", "Inorder output!", "Delete node", "EXIT"};
-    RBStablo red_black_tree;
-
-    cout << "If you want the tree to have an initial structure of nodes [6, 11, 10, 2, 9, 7, 5, 13, 22, 27, 36, 12, 31] type in 1 or type in anything else to omit starting input!" << endl;
-    cout << "Input: ";
-    cin >> menu_option;
-    if(menu_option == 1) {
-        // Starting tree input
-        red_black_tree.RBInsert(6);
-        red_black_tree.RBInsert(11);
-        red_black_tree.RBInsert(10);
-        red_black_tree.RBInsert(2);
-        red_black_tree.RBInsert(9);
-        red_black_tree.RBInsert(7);
-        red_black_tree.RBInsert(5);
-        red_black_tree.RBInsert(13);
-        red_black_tree.RBInsert(22);
-        red_black_tree.RBInsert(27);
-        red_black_tree.RBInsert(36);
-        red_black_tree.RBInsert(12);
-        red_black_tree.RBInsert(31);
-    }
-
-    // Possible only if you put in the initial nodes
-    if(menu_option == 1) {
-        cout << "If you want to have a standard deletion of nodes [5, 27, 36, 12, 11] type in 1 or type in anything else to omit starting deletion!" << endl;
-        cout << "Input: ";
-        menu_option = 0;
-        cin >> menu_option;
-        if(menu_option == 1) {
-            // Starting tree input
-            red_black_tree.RBDelete(5);
-            red_black_tree.RBDelete(27);
-            red_black_tree.RBDelete(36);
-            red_black_tree.RBDelete(12);
-            red_black_tree.RBDelete(11);
-        }
-    }
-
-    // Menu selection
-    do {
-        cout << endl << "Menu:" << endl;
-        for(int i = 0; i < 4; ++i)
-            cout << i+1 << ". " << menu_options[i] << endl;
-        cin >> menu_option;
-        switch(menu_option) {
-            case 1:
-                cout << "You have chosen node insertion!" << endl;
-                cout << "Type in a key to insert" << endl;
-                cin >> node_number;
-                cout << "You have chosen " << node_number << "!" << endl;
-                red_black_tree.RBInsert(node_number);
-                break;
-            case 2:
-                cout << "You have chosen inorder print out!" << endl;
-                red_black_tree.inorder();
-                break;
-            case 3:
-                cout << "You have chosen deleting a node!" << endl;
-                cout << "Type in a key to delete" << endl;
-                cin >> node_number;
-                cout << "You have chosen " << node_number << "!" << endl;
-                red_black_tree.RBDelete(node_number);
-                break;
-            case 4:
-                cout << "Hope you had fun!" << endl;
-                break;
-            default:
-                cout << "That command is not present! Please type in different command!" << endl;
-        }
-    } while(menu_option != 4);
+int main()
+{
+    cout << "Welcome to the Fibonacci heap test cases!" << endl;
+    // Test cases
 
     return 0;
 }
