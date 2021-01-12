@@ -9,4 +9,12 @@
 /cygdrive/c/Users/User/Desktop/Implementation-of-a-few-interesting-algorithms/main.cpp
 iostream
 -
+utility
+-
+vector
+-
+sstream
+-
+cmath
+-
 
