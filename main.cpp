@@ -158,18 +158,102 @@ public:
 // KlikaINDSETGraf
 class CliqueINDSETGraph {
 private:
+    // For a subgraph we say it is a clique if all the nodes of the subgraph are connected (for Clique)
+    // We call it a k - clique if k >= 2 (k -> number of nodes)
+    std::vector<std::vector<int>> graphMatrix, graphMatrix2, matrixNeighbors, matrixNeighbors2;
 
+    // provjera independent seta tj. k vrijednosti independent seta
+    // koristeci algoritam bojenje cvorova tj. pamcenje setova povezanosti (obojanih)
+    // i eliminisuci susjede
+    // ovaj algoritam se moze svesti i na k-klika problem, samo ako se obrnu matrice tj.
+    // values 0 i 1 pri unosu i naprave nove, kao sto je uradjeno ovdje
 public:
+    // unosGrafa
+    void inputGraph(std::vector<std::vector<int>> matrix1, std::vector<std::vector<int>> matrix2) {
+        this->graphMatrix = matrix1;
+        this->graphMatrix2 = matrix2;
+
+        // We find here the neighbors, we save the indexes of the neighbors
+        for(int i = 0; i < this->graphMatrix.size(); ++i) {
+            std::vector<int> neighbor;
+            for (int j = 0; j < this->graphMatrix[i].size(); ++j)
+                if(this->graphMatrix[i][j] == 1)
+                    neighbor.push_back(j);
+            this->matrixNeighbors.push_back(neighbor);
+        }
+
+        // We find here the neighbors, we save the indexes of the neighbors
+        for (int i = 0; i < this->graphMatrix2.size(); ++i) {
+            std::vector<int> neighbor;
+            for (int j = 0; j < this->graphMatrix2[i].size(); ++j)
+                if(this->graphMatrix2[i][j] == 1)
+                    neighbor.push_back(j);
+            this->matrixNeighbors2.push_back(neighbor);
+        }
+    }
+
+    // Continue work from here on to bottom
+    // rjesenjekINDSET
+    bool solutionkINDSET(int k) {
+        // for some number k searches if the inputted graph has at least k independent nodes
+        bool found = false;
+        int howManyINDNodes = this->graphMatrix.size() - k;
+        // minimal independent set/k - clique number
+        int min = this->graphMatrix.size() + 1;
+
+        std::vector<int> helpVec;
+
+        // default value initialization
+        for(int i = 0; i < this->graphMatrix.size(); ++i)
+            helpVec.push_back(1);
+
+        for(int i = 0; i < helpVec.size(); ++i) {
+            std::vector<int> newHelpVec = helpVec;
+            newHelpVec[i] = 0;
+
+            newHelpVec = eliminisiSveSusjedneCvoroveUSetu(this->matrixNeighbors, newHelpVec);
+            int s = dajBrojCvorovaPovezanosti(newHelpVec); // poziv za dobijanje broja povezanih cvorova
+            if (s < min) min = s;
+            if (s <= k) {
+                found = true;
+                break;
+            }
+
+            for (int j = 0; j < k; j++)
+                newHelpVec = provjeraVanjskihCvorova(this->matrixNeighbors, newHelpVec, j);
+            s = dajBrojCvorovaPovezanosti(newHelpVec);
+            if (s < min)
+                min = s;
+            if (s <= k) {
+                found = true;
+                break;
+            }
+        }
+
+        return found;
+    }
+
+    std::vector<int> removeNeighborNode(std::vector<std::vector<int>> &susjedi, std::vector<int> setCvorova) {
+        std::vector<int> tempSet = std::move(setCvorova);
+        int r = 0;
+        while (r != -1) {
+            r = maxPovezanostCvorova(susjedi, tempSet);
+            if (r != -1) tempSet[r] = 0;
+        }
+        return tempSet;
+    }
 };
 
 int main() {
     Formula3CNF initial;
-    int helpVar;
+    CliqueINDSETGraph initialQINDSETG;
+    int helpVar, k;
     vector<int> helpVec, resetHelpVec;
+    vector<vector<int>> graphMatrix, graphMatrixSecond, resetMatrixHelp;
 
     cout << "Dobro došli!" << endl;
     cout << "Odaberite jednu od ponuđenih opcija unosom rednog broja!" << endl;
-    string options[9] = {
+    string options[11] = {
         "Unos formule (Opcija omogućuje unos trenutne logičke formule)\n",
         "Unos grafa (Opcija omogućuje unos trenutnog grafa)\n",
         "Je li formula ispunjiva (Opcija omogućuje ispitivanje da li je formula ispunjiva)\n",
@@ -178,13 +262,16 @@ int main() {
         "Verifikacione formule (Opcija omogućuje verifikaciju nekog pridruživanja vrijednosti logičkim varijablama)\n",
         "Verifikacija skupa nezavisnih čvorova (Opcija omogućuje verifikaciju skupa nezavisnih čvorova)\n",
         "Verifikacija k-klike (Opcija omogućuje verifikaciju k-klike)\n",
+        "Redukcija 3-SAT-TO-INDSET\n",
+        "Redukcija 3-SAT-TO-CLIQUE\n",
         "Izlaz\n"
     };
 
-    for(int i = 0; i < 9; ++i)
+    for(int i = 0; i < 11; ++i)
         cout << i + 1 << ". " << options[i];
 
-    int input;
+    int input, rowColumnSize;
+
     do {
         cout << "Unesite opciju koju želite\n";
         cin >> input;
@@ -198,6 +285,40 @@ int main() {
                 initial.input3CNF();
                 break;
             case 2:
+                cout << "Odabrali ste unos grafa!\n\n";
+                cin.clear();
+                cin.ignore();
+                do {
+                    cout << "Unesite broj redova i kolona: " << std::endl;
+                    cin >> rowColumnSize;
+                    if(rowColumnSize > 5)
+                        cout << "Morate manju dimenziju unijeti (do 5)!" << endl;
+                } while(rowColumnSize > 5);
+                cout << "Unesite elemente matrice: " << std::endl;
+
+                graphMatrix.resize(rowColumnSize);
+                graphMatrixSecond.resize(rowColumnSize);
+
+                for(int i = 0; i < rowColumnSize; ++i) {
+                    graphMatrix[i].resize(rowColumnSize);
+                    graphMatrixSecond[i].resize(rowColumnSize);
+                    int j = 0;
+                    while(j < rowColumnSize) {
+                        int temp;
+                        cin >> temp;
+                        graphMatrix[i][j] = temp;
+                        // We have here two matrices, one for example graphMatrix = [[1,1,0], [0,0,0]] and graphMatrixSecond = [[0,0,1], [1,1,1]]
+                        if(!temp)
+                            graphMatrixSecond[i][j] = 1;
+                        else
+                            graphMatrixSecond[i][j] = 0;
+                        j++;
+                    }
+                }
+
+                initialQINDSETG.inputGraph(graphMatrix, graphMatrixSecond);
+                graphMatrix = resetMatrixHelp;
+                graphMatrixSecond = resetMatrixHelp;
                 break;
             case 3:
                 cout << "Odabrali ste provjeru ispunjivosti formule!\n\n";
@@ -209,6 +330,15 @@ int main() {
                     cout << "Nije ispunjiva formula!" << endl;
                 break;
             case 4:
+                cout << "Odabrali ste provjeru ima li k nezavisnih čvorova!\n\n";
+                cin.clear();
+                cin.ignore();
+                cout << "Unesite vrijednost k: " << endl;
+                cin >> k;
+                if(initialQINDSETG.solutionkINDSET(k))
+                    cout << "Postoji!" << endl;
+                else
+                    cout << "Ne postoji!" << endl;
                 break;
             case 5:
                 break;
@@ -234,6 +364,10 @@ int main() {
             case 8:
                 break;
             case 9:
+                break;
+            case 10:
+                break;
+            case 11:
                 cout << "Odabrali ste prekid programa!\n\n";
                 return 0;
             default:
