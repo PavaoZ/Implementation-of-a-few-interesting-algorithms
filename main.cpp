@@ -161,12 +161,6 @@ private:
     // For a subgraph we say it is a clique if all the nodes of the subgraph are connected (for Clique)
     // We call it a k - clique if k >= 2 (k -> number of nodes)
     std::vector<std::vector<int>> graphMatrix, graphMatrix2, matrixNeighbors, matrixNeighbors2;
-
-    // provjera independent seta tj. k vrijednosti independent seta
-    // koristeci algoritam bojenje cvorova tj. pamcenje setova povezanosti (obojanih)
-    // i eliminisuci susjede
-    // ovaj algoritam se moze svesti i na k-klika problem, samo ako se obrnu matrice tj.
-    // values 0 i 1 pri unosu i naprave nove, kao sto je uradjeno ovdje
 public:
     // unosGrafa
     void inputGraph(std::vector<std::vector<int>> matrix1, std::vector<std::vector<int>> matrix2) {
@@ -192,7 +186,6 @@ public:
         }
     }
 
-    // Continue work from here on to bottom
     // rjesenjekINDSET
     bool solutionkINDSET(int k) {
         // for some number k searches if the inputted graph has at least k independent nodes
@@ -207,24 +200,28 @@ public:
         for(int i = 0; i < this->graphMatrix.size(); ++i)
             helpVec.push_back(1);
 
+//        for(int i = 0; i < this->graphMatrix.size(); ++i)
+//            cout << " vrijednost " << helpVec[i];
+
         for(int i = 0; i < helpVec.size(); ++i) {
             std::vector<int> newHelpVec = helpVec;
             newHelpVec[i] = 0;
 
-            newHelpVec = eliminisiSveSusjedneCvoroveUSetu(this->matrixNeighbors, newHelpVec);
-            int s = dajBrojCvorovaPovezanosti(newHelpVec); // poziv za dobijanje broja povezanih cvorova
+            newHelpVec = removeNeighborNodes(this->matrixNeighbors, newHelpVec);
+            int s = howManyNodesOfConnectability(newHelpVec); // poziv za dobijanje broja povezanih cvorova
             if (s < min) min = s;
-            if (s <= k) {
+            if (s <= howManyINDNodes) {
                 found = true;
                 break;
             }
 
-            for (int j = 0; j < k; j++)
-                newHelpVec = provjeraVanjskihCvorova(this->matrixNeighbors, newHelpVec, j);
-            s = dajBrojCvorovaPovezanosti(newHelpVec);
+            for (int j = 0; j < howManyINDNodes; j++)
+                // check of outer nodes
+                newHelpVec = checkOfNodes(this->matrixNeighbors, newHelpVec, j);
+            s = howManyNodesOfConnectability(newHelpVec);
             if (s < min)
                 min = s;
-            if (s <= k) {
+            if (s <= howManyINDNodes) {
                 found = true;
                 break;
             }
@@ -233,22 +230,180 @@ public:
         return found;
     }
 
-    std::vector<int> removeNeighborNode(std::vector<std::vector<int>> &susjedi, std::vector<int> setCvorova) {
-        std::vector<int> tempSet = std::move(setCvorova);
-        int r = 0;
-        while (r != -1) {
-            r = maxPovezanostCvorova(susjedi, tempSet);
-            if (r != -1) tempSet[r] = 0;
+    vector<int> checkOfNodes(vector<vector<int>> matrixNeighbors, vector<int> nodes, int k) {
+        int count = 0;
+        vector<int> temp = nodes;
+        for (unsigned int i = 0; i < temp.size(); i++) {
+            if (temp[i] == 1) {
+                int sum = 0, index = 0;
+                for (unsigned  int j = 0; j < matrixNeighbors[i].size(); j++)
+                    if(temp[matrixNeighbors[i][j]] == 0) {
+                        index = j;
+                        sum++;
+                    }
+                if (sum == 1 && nodes[matrixNeighbors[i][index]] == 0) {
+                    temp[matrixNeighbors[i][index]] = 1;
+                    temp[i] = 0;
+                    temp = removeNeighborNodes(matrixNeighbors, temp);
+                    count++;
+                }
+                if (count > k)
+                    break;
+            }
         }
-        return tempSet;
+        return temp;
+    }
+
+    int howManyNodesOfConnectability(vector<int> nodes) {
+        int count = 0;
+        for (int i = 0; i < nodes.size(); i++)
+            if(nodes[i] == 1)
+                count++;
+
+        return count;
+    }
+
+
+    vector<int> removeNeighborNodes(const std::vector<std::vector<int>> matrixNeighbors, vector<int> nodes) {
+        vector<int> temp = nodes;
+        int index = 0;
+        while (index != -1) {
+            index = connectabilityBetweenNodesDegree(matrixNeighbors, temp);
+            if (index != -1)
+                temp[index] = 0;
+        }
+
+        return temp;
+    }
+
+    int connectabilityBetweenNodesDegree(vector<vector<int>> matrixNeighbors, vector<int> nodes){
+        int key = -1, maxValue = -1;
+        for (int i = 0; i < nodes.size(); i++) {
+            if (nodes[i] == 1 && neighborsCheck(matrixNeighbors[i], nodes)) {
+                vector<int> temp = nodes;
+                temp[i] = 0;
+                int sum = 0;
+                for (int j = 0; j < temp.size(); j++)
+                    if(temp[j] == 1 && neighborsCheck(matrixNeighbors[j], temp))
+                        sum++;
+
+                if (sum > maxValue) {
+                    maxValue = sum;
+                    key = i;
+                }
+            }
+        }
+
+        return key;
+    }
+
+    bool neighborsCheck(vector<int> matrixNeighbors, vector<int> nodes) {
+        bool isChecked = true;
+        for (int i = 0; i < matrixNeighbors.size(); i++)
+            if (nodes[matrixNeighbors[i]] == 0) {
+                isChecked = false;
+                break;
+            }
+
+        return isChecked;
+    }
+
+//    rjesenjeKClique
+    int solutionKClique(int k) {
+        // for some number k searches if the inputted graph has at least k independent nodes
+        bool found = false;
+        int howManyNodes = this->graphMatrix.size() - k;
+        // minimal independent set/k - clique number
+        int min = this->graphMatrix2.size() + 1;
+
+        std::vector<int> helpVec;
+
+        // default value initialization
+        for(int i = 0; i < this->graphMatrix2.size(); ++i)
+            helpVec.push_back(1);
+
+//        for(int i = 0; i < this->graphMatrix2.size(); ++i)
+//            cout << " vrijednost " << helpVec[i];
+
+        for(int i = 0; i < helpVec.size(); ++i) {
+            std::vector<int> newHelpVec = helpVec;
+            newHelpVec[i] = 0;
+
+            newHelpVec = removeNeighborNodes(this->matrixNeighbors2, newHelpVec);
+            int s = howManyNodesOfConnectability(newHelpVec); // poziv za dobijanje broja povezanih cvorova
+            if (s < min) min = s;
+            if (s <= howManyNodes) {
+                found = true;
+                break;
+            }
+
+            for (int j = 0; j < howManyNodes; j++)
+                // check of outer nodes
+                newHelpVec = checkOfNodes(this->matrixNeighbors2, newHelpVec, j);
+            s = howManyNodesOfConnectability(newHelpVec);
+            if (s < min)
+                min = s;
+            if (s <= howManyNodes) {
+                found = true;
+                break;
+            }
+        }
+
+        return found;
+    }
+
+    // verifikacijaINDSET
+    bool verificationINDSET(vector<int> potentialIndependentNodes) {
+        int help1, help2;
+        bool isChecked = true;
+        for(int i = 0; i < potentialIndependentNodes.size(); ++i) {
+            for(int j = 0; j < potentialIndependentNodes.size(); ++j) {
+                if(i == j)
+                    continue;
+                help1 = potentialIndependentNodes[i];
+                help2 = potentialIndependentNodes[j];
+                if (
+                    this->graphMatrix[help1][help2] != 0
+                    ||
+                    this->graphMatrix[help2][help1] != 0
+                ) {
+                    isChecked = false;
+                    break;
+                }
+            }
+        }
+        return isChecked;
+    }
+
+//    verifikacijaKCLIQUE
+    bool verificationKClique(vector<int> potentialSubSetClique) {
+        int help1, help2;
+        bool isChecked = true;
+        for(int i = 0; i < potentialSubSetClique.size(); ++i) {
+            for(int j = 0; j < potentialSubSetClique.size(); ++j) {
+                if(i == j)
+                    continue;
+                help1 = potentialSubSetClique[i];
+                help2 = potentialSubSetClique[j];
+                if (
+                    this->graphMatrix[help1][help2] != 1
+                    ||
+                    this->graphMatrix[help2][help1] != 1
+                ) {
+                    isChecked = false;
+                    break;
+                }
+            }
+        }
+        return isChecked;
     }
 };
 
 int main() {
     Formula3CNF initial;
     CliqueINDSETGraph initialQINDSETG;
-    int helpVar, k;
-    vector<int> helpVec, resetHelpVec;
+    int helpVar, k, kCliqueVerificatorValue;
+    vector<int> helpVec, helpVec2, helpVec3, resetHelpVec;
     vector<vector<int>> graphMatrix, graphMatrixSecond, resetMatrixHelp;
 
     cout << "Dobro došli!" << endl;
@@ -291,9 +446,9 @@ int main() {
                 do {
                     cout << "Unesite broj redova i kolona: " << std::endl;
                     cin >> rowColumnSize;
-                    if(rowColumnSize > 5)
-                        cout << "Morate manju dimenziju unijeti (do 5)!" << endl;
-                } while(rowColumnSize > 5);
+                    if(rowColumnSize > 15)
+                        cout << "Morate manju dimenziju unijeti (do 15)!" << endl;
+                } while(rowColumnSize > 15);
                 cout << "Unesite elemente matrice: " << std::endl;
 
                 graphMatrix.resize(rowColumnSize);
@@ -341,6 +496,12 @@ int main() {
                     cout << "Ne postoji!" << endl;
                 break;
             case 5:
+                cout << "Odabrali ste provjeru ima li k klika!\n\n";
+                cin >> kCliqueVerificatorValue;
+                if(initialQINDSETG.solutionKClique(kCliqueVerificatorValue))
+                    cout << "Postoji!" << endl;
+                else
+                    cout << "Ne postoji!" << endl;
                 break;
             case 6:
                 cout << "Odabrali ste verifikaciju nekog pridruživanja!\n\n";
@@ -360,8 +521,42 @@ int main() {
                 helpVar = 0;
                 break;
             case 7:
+                std::cin.clear();
+                std::cin.ignore();
+                cout << "Odabrali ste verifikaciju skupa nezavisnih čvorova!\n\n";
+                while(helpVar != -1) {
+                    cin >> helpVar;
+                    if(helpVar == -1) break;
+                    helpVec2.push_back(helpVar);
+                }
+                if(helpVec2.size() > 0) {
+                    if(initialQINDSETG.verificationINDSET(helpVec2))
+                        cout << "Ispunjeno!" << endl;
+                    else
+                        cout << "Nije ispunjeno!" << endl;
+                } else
+                    cout << "Unesite više vrijednosti!" << endl;
+                helpVec2 = resetHelpVec;
+                helpVar = 0;
                 break;
             case 8:
+                std::cin.clear();
+                std::cin.ignore();
+                cout << "Odabrali ste verifikaciju k klike!\n\n";
+                while(helpVar != -1) {
+                    cin >> helpVar;
+                    if(helpVar == -1) break;
+                    helpVec3.push_back(helpVar);
+                }
+                if(helpVec3.size() > 0) {
+                    if(initialQINDSETG.verificationKClique(helpVec3))
+                        cout << "Ispunjeno!" << endl;
+                    else
+                        cout << "Nije ispunjeno!" << endl;
+                } else
+                    cout << "Unesite više vrijednosti!" << endl;
+                helpVec3 = resetHelpVec;
+                helpVar = 0;
                 break;
             case 9:
                 break;
@@ -373,6 +568,6 @@ int main() {
             default:
                 cout << "Unesena opcija nije validna, unesite ponovo!\n\n";
         }
-    } while(input != 9);
+    } while(input != 11);
     return 0;
 }
