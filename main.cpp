@@ -155,10 +155,17 @@ public:
     }
 };
 
+// KlikaINDSETGraf
+class CliqueINDSETGraph {
+private:
+
+public:
+};
+
 int main() {
     Formula3CNF initial;
     int helpVar;
-    vector<int> helpVec;
+    vector<int> helpVec, resetHelpVec;
 
     cout << "Dobro došli!" << endl;
     cout << "Odaberite jednu od ponuđenih opcija unosom rednog broja!" << endl;
@@ -212,6 +219,15 @@ int main() {
                     if(helpVar == -1) break;
                     helpVec.push_back(helpVar);
                 }
+                if(helpVec.size() > 0) {
+                    if(initial.verification3CNF(helpVec))
+                        cout << "Ispunjivo za ovo pridruživanje!" << endl;
+                    else
+                        cout << "Nije ispunjivo za ovo pridruživanje!" << endl;
+                } else
+                    cout << "Unesite više vrijednosti!" << endl;
+                helpVec = resetHelpVec;
+                helpVar = 0;
                 break;
             case 7:
                 break;
