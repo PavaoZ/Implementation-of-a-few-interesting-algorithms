@@ -6,12 +6,12 @@ enum Color {RED, BLACK};
 
 template <typename type>
 struct Node {
-    int data;
+    int key;
     Color color;
     Node *left, *right, *parent;
 
-    Node(type data) {
-        this->data = data;
+    Node(type key) {
+        this->key = key;
         left =  nullptr;
         right = nullptr;
         parent = nullptr;
@@ -73,9 +73,12 @@ class RBStablo {
     }
 
     void inOrderRun(Node<type>* &root) {
-        if (root == nullptr) return;
+        if (root == nullptr)
+            return;
         inOrderRun(root->left);
-        std::cout << root->data << " ";
+
+        std::cout << root->key << " ";
+
         inOrderRun(root->right);
     }
 
@@ -157,7 +160,7 @@ class RBStablo {
     void inOrderHelper(Node<type>* node) {
         if (node != nullptr) {
             inOrderHelper(node->left);
-            cout << node->data << " ";
+            cout << node->key << " ";
             inOrderHelper(node->right);
         }
     }
@@ -214,14 +217,14 @@ public:
 
         while(x != nullptr) {
             y = x;
-            if(novi->data < x->data) x = x->left;
+            if(novi->key < x->key) x = x->left;
             else x = x->right;
         }
 
         novi->parent = y;
 
         if(y == nullptr) root = novi;
-        else if (novi->data < y->data) y->left = novi;
+        else if (novi->key < y->key) y->left = novi;
         else y->right = novi;
 
         novi->left = nullptr;
@@ -245,7 +248,7 @@ public:
             return;
         }
 
-        if(node->data == value) {
+        if(node->key == value) {
             Node<type>* x;
             Node<type>* y = node;
             Color orig_col = y->color;
@@ -279,7 +282,7 @@ public:
             return;
         }
 
-        if(value < node->data)
+        if(value < node->key)
             findNode(node->left, value);
         else
             findNode(node->right, value);
