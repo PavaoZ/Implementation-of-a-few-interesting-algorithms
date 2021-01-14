@@ -108,7 +108,6 @@ public:
         }
 
         this->numberOfNodes = getNumberOfNodesFromRootNode(H1) + getNumberOfNodesFromRootNode(H2);
-        cout << this->numberOfNodes << "broj nodova" << endl;
         return H;
     }
 
@@ -125,41 +124,76 @@ public:
     }
 
     NodePointer FIBHeapExtractMin(NodePointer H_min) {
-        // H_min is the heap we are extracting from
-        NodePointer p, tempPtr, z = H_min;
-        p = z;
-        tempPtr = z;
-        if (z == nullptr)
-            return z;
-        NodePointer x, tempPtr2;
-        x = nullptr;
-        if (z->child != nullptr)
-            x = z->child;
-        if (x != nullptr){
-            tempPtr = x;
-            do {
-                tempPtr2 = x->right;
-                (H_min->left)->right = x;
-                x->right = H_min;
-                x->left = H_min->left;
-                H_min->left = x;
-                if (x->key < H_min->key)
-                    H_min = x;
-                x->parent = nullptr;
-                x = tempPtr2;
-            } while (tempPtr2 != tempPtr);
+        NodePointer z = H_min;
+        if(z != nullptr){
+            auto x = z->child;
+
+            if (x != nullptr)
+            {
+                NodePointer np;
+                NodePointer ptr = x;
+                do
+                {
+                    np = x->right;
+                    (H_min->left)->right = x;
+                    x->right = H_min;
+                    x->left = H_min->left;
+                    H_min->left = x;
+                    if (x->key < H_min->key) H_min = x;
+                    x->parent = nullptr;
+                    x = np;
+                }
+                while (np != ptr);
+            }
+
+            H_min->left->right = H_min->right;
+            H_min->right->left = H_min->left;
+
+            if(z == z->left && z->child == nullptr) H_min = nullptr;
+            else {
+                H_min = z->right;
+                Consolidate(H_min);
+            }
+            this->numberOfNodes--;
         }
-        (z->left)->right = z->right;
-        (z->right)->left = z->left;
-//        H_min = z->right;
-        if (z == z->right && z->child == nullptr)
-            H = nullptr;
-        else {
-            H_min = z->right;
-            Consolidate(H_min);
-        }
-        this->H = this->H - 1;
-        return p;
+        return z;
+
+
+//        // H_min is the heap we are extracting from
+//        NodePointer p, tempPtr, z = H_min;
+//        p = z;
+//        tempPtr = z;
+//        if (z == nullptr)
+//            return z;
+//        NodePointer x, tempPtr2;
+//        x = nullptr;
+//        if (z->child != nullptr)
+//            x = z->child;
+//        if (x != nullptr){
+//            tempPtr = x;
+//            do {
+//                tempPtr2 = x->right;
+//                (H_min->left)->right = x;
+//                x->right = H_min;
+//                x->left = H_min->left;
+//                H_min->left = x;
+//                if (x->key < H_min->key)
+//                    H_min = x;
+//                x->parent = nullptr;
+//                x = tempPtr2;
+//            } while (tempPtr2 != tempPtr);
+//        }
+//        (z->left)->right = z->right;
+//        (z->right)->left = z->left;
+////        H_min = z->right;
+//        if (z == z->right && z->child == nullptr)
+//            H = nullptr;
+//        else {
+//            H_min = z->right;
+//            Consolidate(H_min);
+//        }
+//        this->H = this->H - 1;
+//        return p;
     }
 
     void Consolidate(NodePointer H_min) {
@@ -367,7 +401,12 @@ int main()
     H = initial.FIBHeapUnion(H, H2);
     H2 = initial2.FIBHeapUnion(H, H2);
 
+    // Testing next
+    H = initial.FIBHeapInsert(H, createNode(2));
+    H = initial.FIBHeapInsert(H, createNode(23));
+    H = initial.FIBHeapInsert(H, createNode(15));
 
+    H = initial.FIBHeapExtractMin(H);
     initial.Display(H);
     initial2.Display(H2);
 
