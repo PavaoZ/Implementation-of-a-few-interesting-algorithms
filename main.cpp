@@ -211,27 +211,30 @@ public:
     }
 
     void RBInsert(type value) {
-        Node<type> *novi = new Node<type>(value);
+        Node<type> *inputNode = new Node<type>(value);
         Node<type> *y = nullptr;
-        Node<type> *x = root;
+        Node<type> *x = this->root;
 
         while(x != nullptr) {
             y = x;
-            if(novi->key < x->key) x = x->left;
+            if(inputNode->key < x->key)
+                x = x->left;
             else x = x->right;
         }
 
-        novi->parent = y;
+        inputNode->parent = y;
 
-        if(y == nullptr) root = novi;
-        else if (novi->key < y->key) y->left = novi;
-        else y->right = novi;
+        if(y == nullptr)
+            this->root = inputNode;
+        else if (inputNode->key < y->key)
+            y->left = inputNode;
+        else y->right = inputNode;
 
-        novi->left = nullptr;
-        novi->right = nullptr;
-        novi->color = RED;
+        inputNode->left = nullptr;
+        inputNode->right = nullptr;
+        inputNode->color = RED;
 
-        RBInsertFixUp(this->root, novi);
+        RBInsertFixUp(this->root, inputNode);
     }
 
     void inorder() {
