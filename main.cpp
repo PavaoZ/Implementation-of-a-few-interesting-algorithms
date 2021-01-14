@@ -264,22 +264,28 @@ public:
             if(y->left != nullptr) y->left->parent = y;
             y->color = z->color;
         }
-        if(orig_col == BLACK) RBDeleteFixup(x);
+        if(orig_col == BLACK)
+            RBDeleteFixup(x);
 
         z->right = nullptr;
         z->left = nullptr;
         delete z;
     }
 
-    void findNode(Node<type> * cvor, type value) {
-        if(cvor == nullptr) return;
-
-        if(cvor->data == value) {
-            rbDelete(cvor);
+    void findNode(Node<type> * node, type value) {
+        if(node == nullptr) {
+            cout << "Node not present in tree!" << endl;
             return;
         }
-        if(value < cvor->data) findNode(cvor->left, value);
-        else findNode(cvor->right, value);
+
+        if(node->data == value) {
+            rbDelete(node);
+            return;
+        }
+        if(value < node->data)
+            findNode(node->left, value);
+        else
+            findNode(node->right, value);
     }
 };
 
