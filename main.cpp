@@ -239,39 +239,6 @@ public:
         findNode(this->root, value);
     }
 
-    void rbDelete(Node<type>* z) {
-        Node<type>* x;
-        Node<type>* y = z;
-        Color orig_col = y->color;
-        if(z->left == nullptr) {
-            x = z->right;
-            RBTransplant(this->root, z, z->right);
-        } else if(z->right == nullptr) {
-            x = z->left;
-            RBTransplant(this->root, z, z->left);
-        } else {
-            y = tree_minimum(z->right);
-            orig_col = y->color;
-            x = y->right;
-            if(y->parent == z && x != nullptr) x->parent = y;
-            else {
-                RBTransplant(this->root, y, y->right);
-                y->right = z->right;
-                if(y->right != nullptr) y->right->parent = y;
-            }
-            RBTransplant(this->root, z, y);
-            y->left  = z->left;
-            if(y->left != nullptr) y->left->parent = y;
-            y->color = z->color;
-        }
-        if(orig_col == BLACK)
-            RBDeleteFixup(x);
-
-        z->right = nullptr;
-        z->left = nullptr;
-        delete z;
-    }
-
     void findNode(Node<type> * node, type value) {
         if(node == nullptr) {
             cout << "Node not present in tree!" << endl;
@@ -279,9 +246,39 @@ public:
         }
 
         if(node->data == value) {
-            rbDelete(node);
+            Node<type>* x;
+            Node<type>* y = node;
+            Color orig_col = y->color;
+            if(node->left == nullptr) {
+                x = node->right;
+                RBTransplant(this->root, node, node->right);
+            } else if(node->right == nullptr) {
+                x = node->left;
+                RBTransplant(this->root, node, node->left);
+            } else {
+                y = tree_minimum(node->right);
+                orig_col = y->color;
+                x = y->right;
+                if(y->parent == node && x != nullptr) x->parent = y;
+                else {
+                    RBTransplant(this->root, y, y->right);
+                    y->right = node->right;
+                    if(y->right != nullptr) y->right->parent = y;
+                }
+                RBTransplant(this->root, node, y);
+                y->left  = node->left;
+                if(y->left != nullptr) y->left->parent = y;
+                y->color = node->color;
+            }
+            if(orig_col == BLACK)
+                RBDeleteFixup(x);
+
+            node->right = nullptr;
+            node->left = nullptr;
+            delete node;
             return;
         }
+
         if(value < node->data)
             findNode(node->left, value);
         else
