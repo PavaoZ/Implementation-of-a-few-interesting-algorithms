@@ -107,11 +107,10 @@ public:
 
 
     Node<type>* FIBHeapExtractMin(){
-        Node<type>* z = min;
+        Node<type>* z = this->min;
         if(z != nullptr){
             auto x = z->child;
 
-            // ubacivanje djece
             if (x != nullptr)
             {
                 Node<type> *np;
@@ -138,7 +137,7 @@ public:
                 min = z->right;
                 Consolidate();
             }
-            n = n - 1;
+            n--;
         }
         return z;
     }
@@ -285,174 +284,158 @@ public:
             cout << "Key deleted!" << endl;
         else
             cout << "Key not deleted." << endl;
-
     }
 
 };
 
-void testInsert() {
-    FIBHeap<int> fg = FIBHeap<int>();
-    // insert u praznu gomilu
-    auto novi = new Node<int>(5);
-    fg.FIBHeapInsert(novi);
-
-    // insert u nepraznu gomilu
-    auto novi2 = new Node<int>(2);
-    fg.FIBHeapInsert(novi2);
-    delete novi;
-    novi = nullptr;
-    delete novi2;
-    novi2 = nullptr;
-}
-
-void testUnion2Pune() {
-    FIBHeap<int> fg1 = FIBHeap<int>();
-    auto novi1 = new Node<int>(5);
-    auto novi2 = new Node<int>(2);
-    auto novi3 = new Node<int>(6);
-    auto novi4 = new Node<int>(7);
-    fg1.FIBHeapInsert(novi1);
-    fg1.FIBHeapInsert(novi2);
-
-    FIBHeap<int> fg2 = FIBHeap<int>();
-    fg2.FIBHeapInsert(novi3);
-    fg2.FIBHeapInsert(novi3);
-
-    FIBHeap<int> fg3 = fg1.FIBHeapUnion(fg1, fg2);
-    delete novi1;
-    delete novi2;
-    delete novi3;
-    delete novi4;
-}
-
-void testUnion1Prazna() {
-    FIBHeap<int> fg1 = FIBHeap<int>();
-    auto novi1 = new Node<int>(5);
-    auto novi2 = new Node<int>(2);
-    fg1.FIBHeapInsert(novi1);
-    fg1.FIBHeapInsert(novi2);
-
-    FIBHeap<int> fg2 = FIBHeap<int>();
-
-    FIBHeap<int> fg3 = fg1.FIBHeapUnion(fg1, fg2);
-    delete novi1;
-    delete novi2;
-}
-
-void testUnion2Prazne() {
-    FIBHeap<int> fg1 = FIBHeap<int>();
-    FIBHeap<int> fg2 = FIBHeap<int>();
-    FIBHeap<int> fg3 = fg1.FIBHeapUnion(fg1, fg2);
-}
-
-void testExtractMin() {
-    auto novi1 = new Node<int>(1);
-    auto novi2 = new Node<int>(2);
-    auto novi3 = new Node<int>(3);
-    auto novi4 = new Node<int>(4);
-    auto novi5 = new Node<int>(5);
-    FIBHeap<int> fg = FIBHeap<int>();
-    fg.FIBHeapInsert(novi1);
-    fg.FIBHeapInsert(novi2);
-    fg.FIBHeapInsert(novi3);
-    fg.FIBHeapInsert(novi4);
-    fg.FIBHeapInsert(novi5);
-
-    // extract min kad se nema djece
-    Node<int>* b = fg.FIBHeapExtractMin();
-
-    // extract min kad se ima djece
-    Node<int>* c = fg.FIBHeapExtractMin();
-
-    delete novi1;
-    delete novi2;
-    delete novi3;
-    delete novi4;
-    delete novi5;
-}
-
-void testDecreaseKey() {
-    auto novi0 = new Node<int>(11);
-    auto novi1 = new Node<int>(232);
-    auto novi2 = new Node<int>(23);
-    auto novi3 = new Node<int>(24);
-    auto novi4 = new Node<int>(36);
-    auto novi5 = new Node<int>(37);
-    auto novi6 = new Node<int>(9);
-
-    FIBHeap<int> fg = FIBHeap<int>();
-
-    // kada je gomila prazna
-    fg.FIBHeapDecreaseKey(5123, 2);
-
-    fg.FIBHeapInsert(novi0);
-    fg.FIBHeapInsert(novi1);
-    fg.FIBHeapInsert(novi2);
-    fg.FIBHeapInsert(novi3);
-    fg.FIBHeapInsert(novi4);
-    fg.FIBHeapInsert(novi5);
-    fg.FIBHeapInsert(novi6);
-
-    // kada nema kljuca
-    fg.FIBHeapDecreaseKey(5123, 2);
-    // kada je kljuc veci od trazenog
-    fg.FIBHeapDecreaseKey(2, 232323);
-
-    // slucaj kada treba smanjiti key
-    Node<int>* a = fg.FIBHeapExtractMin();
-//    std::cout << "Izbaceni: " << a->key << std::endl; // izbacuje se kec, zatim se decrease-a 9 na 1
-    fg.FIBHeapDecreaseKey(4, 1);
-    fg.FIBHeapDecreaseKey(9, 0);
-
-    delete novi0;
-    delete novi1;
-    delete novi2;
-    delete novi3;
-    delete novi4;
-    delete novi5;
-    delete novi6;
-}
-
-void testDeleteKey(){
-    auto novi0 = new Node<int>(1);
-    auto novi1 = new Node<int>(2);
-    auto novi2 = new Node<int>(3);
-    auto novi3 = new Node<int>(4);
-    auto novi4 = new Node<int>(6);
-    auto novi5 = new Node<int>(7);
-    auto novi6 = new Node<int>(9);
-
-    FIBHeap<int> fg = FIBHeap<int>();
-
-    fg.FIBHeapInsert(novi0);
-    fg.FIBHeapInsert(novi1);
-    fg.FIBHeapInsert(novi2);
-    fg.FIBHeapInsert(novi3);
-    fg.FIBHeapInsert(novi4);
-    fg.FIBHeapInsert(novi5);
-    fg.FIBHeapInsert(novi6);
-
-    Node<int>* a = fg.FIBHeapExtractMin();
-    fg.FIBHeapDelete(4);
-
-    delete novi0;
-    delete novi1;
-    delete novi2;
-    delete novi3;
-    delete novi4;
-    delete novi5;
-    delete novi6;
-}
-
 int main() {
-    testInsert();
-    testUnion2Pune();
-    testUnion1Prazna();
-    testUnion2Prazne();
-    testUnion2Pune();
-    testExtractMin();
-    testDecreaseKey();
-    testDeleteKey();
+    // Input test
+    // newly initialized empty heap
+    FIBHeap<int> testHeap = FIBHeap<int>();
+    auto test_node1 = new Node<int>(5);
+    auto test_node2 = new Node<int>(22);
+    auto test_node3 = new Node<int>(24);
+    auto test_node4 = new Node<int>(23);
+
+    testHeap.FIBHeapInsert(test_node1);
+    testHeap.FIBHeapInsert(test_node2);
+    testHeap.FIBHeapInsert(test_node3);
+    testHeap.FIBHeapInsert(test_node4);
+
+    delete test_node1;
+    test_node1 = nullptr;
+    delete test_node2;
+    test_node2 = nullptr;
+    delete test_node3;
+    test_node3 = nullptr;
+    delete test_node4;
+    test_node4 = nullptr;
+
+    // Union test with both heaps full
+    testHeap = FIBHeap<int>();
+    test_node1 = new Node<int>(5);
+    test_node2 = new Node<int>(22);
+    test_node3 = new Node<int>(24);
+    test_node4 = new Node<int>(23);
+    testHeap.FIBHeapInsert(test_node1);
+    testHeap.FIBHeapInsert(test_node2);
+    testHeap.FIBHeapInsert(test_node3);
+    testHeap.FIBHeapInsert(test_node4);
+
+    FIBHeap<int> testHeap2 = FIBHeap<int>();
+    testHeap2.FIBHeapInsert(test_node1);
+    testHeap2.FIBHeapInsert(test_node2);
+    testHeap2.FIBHeapInsert(test_node3);
+    testHeap2.FIBHeapInsert(test_node4);
+
+    FIBHeap<int> testHeap3 = testHeap.FIBHeapUnion(testHeap, testHeap2);
+    delete test_node1;
+    test_node1 = nullptr;
+    delete test_node2;
+    test_node2 = nullptr;
+    delete test_node3;
+    test_node3 = nullptr;
+    delete test_node4;
+    test_node4 = nullptr;
+
+    // Union test when not both are full
+    testHeap = FIBHeap<int>();
+    test_node1 = new Node<int>(25);
+    test_node2 = new Node<int>(12);
+    testHeap.FIBHeapInsert(test_node1);
+    testHeap.FIBHeapInsert(test_node2);
+
+    testHeap2 = FIBHeap<int>();
+
+    testHeap3 = testHeap.FIBHeapUnion(testHeap, testHeap2);
+
+    delete test_node1;
+    test_node1 = nullptr;
+    delete test_node2;
+    test_node2 = nullptr;
+
+    testHeap = FIBHeap<int>();
+    testHeap2 = FIBHeap<int>();
+    testHeap3 = testHeap.FIBHeapUnion(testHeap, testHeap2);
+
+    // Test delete
+    testHeap = FIBHeap<int>();
+    test_node1 = new Node<int>(5);
+    test_node2 = new Node<int>(22);
+    test_node3 = new Node<int>(24);
+    test_node4 = new Node<int>(23);
+    testHeap.FIBHeapInsert(test_node1);
+    testHeap.FIBHeapInsert(test_node2);
+    testHeap.FIBHeapInsert(test_node3);
+    testHeap.FIBHeapInsert(test_node4);
+
+    testHeap.FIBHeapDelete(5);
+
+    delete test_node1;
+    test_node1 = nullptr;
+    delete test_node2;
+    test_node2 = nullptr;
+    delete test_node3;
+    test_node3 = nullptr;
+    delete test_node4;
+    test_node4 = nullptr;
+
+    // Test extract minimum
+    testHeap = FIBHeap<int>();
+    test_node1 = new Node<int>(5);
+    test_node2 = new Node<int>(22);
+    test_node3 = new Node<int>(24);
+    test_node4 = new Node<int>(23);
+    testHeap.FIBHeapInsert(test_node1);
+    testHeap.FIBHeapInsert(test_node2);
+    testHeap.FIBHeapInsert(test_node3);
+    testHeap.FIBHeapInsert(test_node4);
+
+    // Deleting in a row
+    Node<int> *node = testHeap.FIBHeapExtractMin();
+    cout << endl << "Extracted key: " << node->key << "!" << endl;
+    node = testHeap.FIBHeapExtractMin();
+    cout << endl << "Extracted key: " << node->key << "!" << endl;
+
+    delete test_node1;
+    test_node1 = nullptr;
+    delete test_node2;
+    test_node2 = nullptr;
+    delete test_node3;
+    test_node3 = nullptr;
+    delete test_node4;
+    test_node4 = nullptr;
+
+    // Test decrease key
+    testHeap = FIBHeap<int>();
+    testHeap.FIBHeapDecreaseKey(232, 1);
+
+    test_node1 = new Node<int>(5);
+    test_node2 = new Node<int>(22);
+    test_node3 = new Node<int>(24);
+    test_node4 = new Node<int>(23);
+    testHeap.FIBHeapInsert(test_node1);
+    testHeap.FIBHeapInsert(test_node2);
+    testHeap.FIBHeapInsert(test_node3);
+    testHeap.FIBHeapInsert(test_node4);
+
+    // Heap not empty but key not present
+    testHeap.FIBHeapDecreaseKey(232, 1);
+
+    // Larger key
+    testHeap.FIBHeapDecreaseKey(5, 1232323);
+
+    // Normal case
+    testHeap.FIBHeapDecreaseKey(5, 1);
+
+    delete test_node1;
+    test_node1 = nullptr;
+    delete test_node2;
+    test_node2 = nullptr;
+    delete test_node3;
+    test_node3 = nullptr;
+    delete test_node4;
+    test_node4 = nullptr;
 
     return 0;
 }
