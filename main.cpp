@@ -2,296 +2,298 @@
 
 using namespace std;
 
+enum Color {RED, BLACK};
+
+template <typename type>
 struct Node {
-    int key;
-    Node *parent;
-    Node *left;
-    Node *right;
-    char color; // 0 is black, 1 is red
+    int data;
+    Color color;
+    Node *left, *right, *parent;
+
+    Node(type data) {
+        this->data = data;
+        left =  nullptr;
+        right = nullptr;
+        parent = nullptr;
+        this->color = RED;
+    }
+    ~Node(){
+        delete left;
+        left = nullptr;
+        delete right;
+        right = nullptr;
+    }
 };
 
-typedef Node *NodePointer;
+template <typename type>
 
 class RBStablo {
-private:
-    NodePointer root;
-    NodePointer T_nill;
+    Node<type> *root;
 
-    void inOrderHelper(NodePointer node) {
-        if (node != T_nill) {
+    void RBInsertFixUp(Node<type>* &root, Node<type> *z) {
+        while(z != root && z->color != BLACK && z->parent->color == RED) {
+            if(z->parent == z->parent->parent->left) {
+                Node<type> *y = z->parent->parent->right;
+                if(y != nullptr && y->color == RED) {
+                    z->parent->color = BLACK;
+                    y->color = BLACK;
+                    z->parent->parent->color = RED;
+                    z = z->parent->parent;
+                }
+                else {
+                    if(z == z->parent->right){
+                        z = z->parent;
+                        leftRotate(root, z);
+                    }
+                    z->parent->color = BLACK;
+                    z->parent->parent->color = RED;
+                    rightRotate(root, z->parent->parent);
+                }
+            }
+            else {
+                Node<type> *y = z->parent->parent->left;
+                if(y != nullptr && y->color == RED) {
+                    z->parent->color = BLACK;
+                    y->color = BLACK;
+                    z->parent->parent->color = RED;
+                    z = z->parent->parent;
+                }
+                else {
+                    if(z == z->parent->left){
+                        z = z->parent;
+                        rightRotate(root, z);
+                    }
+                    z->parent->color = BLACK;
+                    z->parent->parent->color = RED;
+                    leftRotate(root, z->parent->parent);
+                }
+            }
+        }
+        root->color = BLACK;
+    }
+
+    void inOrderRun(Node<type>* &root) {
+        if (root == nullptr) return;
+        inOrderRun(root->left);
+        std::cout << root->data << " ";
+        inOrderRun(root->right);
+    }
+
+    void RBTransplant(Node<type>* &root, Node<type>* u, Node<type>* v) {
+        if(u != nullptr && u->parent == nullptr)
+            root = v;
+        else if(u != nullptr && u->parent != nullptr && u == u->parent->left)
+            u->parent->left = v;
+        else if(u != nullptr && u->parent != nullptr)
+            u->parent->right = v;
+
+        if(v != nullptr && u != nullptr)
+            v->parent = u->parent;
+
+    }
+
+    void RBDeleteFixup(Node<type> * &x) {
+        while(x != nullptr && x != this->root && x->color == BLACK) {
+            if(x->parent != nullptr && x == x->parent->left) {
+                Node<type>* w = x->parent->right;
+                if(w->color == RED) {
+                    w->color = BLACK;
+                    x->parent->color = RED;
+                    leftRotate(this->root, x->parent);
+                    w = x->parent->right;
+                }
+
+                if(w->left->color == BLACK && w->right->color == BLACK) {
+                    w->color = RED;
+                    x = x->parent;
+                } else {
+                    if (w->right->color == BLACK) {
+                        w->left->color = BLACK;
+                        w->color = RED;
+                        rightRotate(this->root, w);
+                        w = x->parent->right;
+                    }
+                    w->color = x->parent->color;
+                    x->parent->color = BLACK;
+                    w->right->color = BLACK;
+                    leftRotate(this->root, x->parent);
+                    x = this->root;
+                }
+            } else {
+                Node<type>* w = x->parent->left;
+                if(w->color == RED){
+                    w->color = BLACK;
+                    x->parent->color = RED;
+                    rightRotate(this->root, x->parent);
+                    w = x->parent->left;
+                }
+
+                if(w->right->color == BLACK && w->left->color == BLACK) {
+                    w->color = RED;
+                    x = x->parent;
+                } else {
+                    if (w->left->color == BLACK) {
+                        w->right->color = BLACK;
+                        w->color = RED;
+                        leftRotate(this->root, w);
+                        w = x->parent->left;
+                    }
+                    w->color = x->parent->color;
+                    x->parent->color = BLACK;
+                    w->left->color = BLACK;
+                    rightRotate(this->root, x->parent);
+                    x = this->root;
+                }
+            }
+        }
+    }
+
+    Node<type>* tree_minimum(Node<type>* poc) {
+        while (poc->left != nullptr)
+            poc = poc->left;
+        return poc;
+    }
+
+    void inOrderHelper(Node<type>* node) {
+        if (node != nullptr) {
             inOrderHelper(node->left);
-            cout << node->key << " ";
+            cout << node->data << " ";
             inOrderHelper(node->right);
         }
     }
 
-    // fix the red-black tree
-    void RBInsertFixUp(NodePointer z){
-        NodePointer temp;
-        while (z->parent->color == 1) {
-            if (z->parent == z->parent->parent->right) {
-                temp = z->parent->parent->left;
-                if (temp->color == 1) {
-                    temp->color = 0; // Case 1
-                    z->parent->color = 0; // Case 1
-                    z->parent->parent->color = 1; // Case 1
-                    z = z->parent->parent; // Case 1
-                } else {
-                    if (z == z->parent->left) {
-                        z = z->parent; // Case 2
-                        rightRotate(z); // Case 2
-                    }
-                    z->parent->color = 0; // Case 3
-                    z->parent->parent->color = 1; // Case 3
-                    leftRotate(z->parent->parent); // Case 3
-                }
-            } else {
-                temp = z->parent->parent->right;
-
-                if (temp->color == 1) {
-                    temp->color = 0; // Else case 1
-                    z->parent->color = 0; // Else case 1
-                    z->parent->parent->color = 1; // Else case 1
-                    z = z->parent->parent; // Else case 1
-                } else {
-                    if (z == z->parent->right) {
-                        z = z->parent; // Else case 2
-                        leftRotate(z); // Else case 2
-                    }
-                    z->parent->color = 0; // Else case 3
-                    z->parent->parent->color = 1; // Else case 3
-                    rightRotate(z->parent->parent); // Else case 3
-                }
-            }
-            if (z == root) break;
-        }
-        root->color = 0;
-    }
-
-    // Fixing the RBStablo after delete
-    void RBDeleteFixup(NodePointer x) {
-        NodePointer w;
-        while (x != this->root && x->color == 0) {
-            if (x == x->parent->left) {
-                w = x->parent->right;
-                if (w->color == 1) {
-                    w->color = 0; // Case 1
-                    x->parent->color = 1; // Case 1
-                    leftRotate(x->parent); // Case 1
-                    w = x->parent->right; // Case 1
-                }
-
-                if (w->left->color == 0 && w->right->color == 0) {
-                    w->color = 1; // Case 2
-                    x = x->parent; // Case 2
-                } else {
-                    if (w->right->color == 0) {
-                        w->left->color = 0;// Case 3
-                        w->color = 1; // Case 3
-                        rightRotate(w); // Case 3
-                        w = x->parent->right; // Case 3
-                    }
-
-                    w->color = x->parent->color; // Case 4
-                    x->parent->color = 0; // Case 4
-                    w->right->color = 0; // Case 4
-                    leftRotate(x->parent); // Case 4
-                    x = this->root; // Case 4
-                }
-            } else {
-                w = x->parent->left;
-                if (w->color == 1) {
-                    w->color = 0; // Else case 1
-                    x->parent->color = 1; // Else case 1
-                    rightRotate(x->parent); // Else case 1
-                    w = x->parent->left; // Else case 1
-                }
-
-                if (w->right->color == 0 && w->left->color == 0) {
-                    w->color = 1; // Else case 2
-                    x = x->parent; // Else case 2
-                } else {
-                    if (w->left->color == 0) {
-                        w->right->color = 0; // Else case 3
-                        w->color = 1; // Else case 3
-                        leftRotate(w); // Else case 3
-                        w = x->parent->left; // Else case 3
-                    }
-
-                    w->color = x->parent->color; // Else case 4
-                    x->parent->color = 0; // Else case 4
-                    w->left->color = 0; // Else case 4
-                    rightRotate(x->parent); // Else case 4
-                    x = this->root; // Else case 4
-                }
-            }
-        }
-        x->color = 0;
-    }
 public:
     RBStablo() {
-        this->T_nill = new Node;
-        this->T_nill->color = 0;
-        this->T_nill->left = nullptr;
-        this->T_nill->right = nullptr;
-        this->root = T_nill;
+        this->root = nullptr;
+    }
+
+    ~RBStablo() {
+        delete this->root;
+        this->root = nullptr;
+    }
+    void leftRotate(Node<type> *&root, Node<type> *x) {
+        Node<type> *y = x->right;
+
+        x->right = y->left;
+
+        if (y->left != nullptr) y->left->parent = x;
+
+        y->parent = x->parent;
+
+        if (x->parent == nullptr) root = y;
+        else if (x == x->parent->left) x->parent->left = y;
+        else x->parent->right = y;
+
+        y->left = x;
+        x->parent = y;
+    }
+
+    void rightRotate(Node<type> *&root, Node<type> *y) {
+        Node<type> *x = y->left;
+
+        y->left = x->right;
+
+        if (y->left != nullptr) y->left->parent = y;
+
+        x->parent = y->parent;
+
+        if (y->parent == nullptr) root = x;
+
+        else if (y == y->parent->left) y->parent->left = x;
+
+        else y->parent->right = x;
+
+        x->right = y;
+        y->parent = x;
+    }
+
+    void RBInsert(type value) {
+        Node<type> *novi = new Node<type>(value);
+        Node<type> *y = nullptr;
+        Node<type> *x = root;
+
+        while(x != nullptr) {
+            y = x;
+            if(novi->data < x->data) x = x->left;
+            else x = x->right;
+        }
+
+        novi->parent = y;
+
+        if(y == nullptr) root = novi;
+        else if (novi->data < y->data) y->left = novi;
+        else y->right = novi;
+
+        novi->left = nullptr;
+        novi->right = nullptr;
+        novi->color = RED;
+
+        RBInsertFixUp(this->root, novi);
     }
 
     void inorder() {
         inOrderHelper(this->root);
     }
 
-    // Rotating left
-    void leftRotate(NodePointer x) {
-        NodePointer y = x->right;
-        x->right = y->left;
-        if (y->left != T_nill)
-            y->left->parent = x;
-        y->parent = x->parent;
-        if (x->parent == nullptr)
-            this->root = y;
-        else if (x == x->parent->left)
-            x->parent->left = y;
-        else
-            x->parent->right = y;
-        y->left = x;
-        x->parent = y;
+    void RBDelete(type value) {
+        findNode(this->root, value);
     }
 
-    // Rotating right
-    void rightRotate(NodePointer x) {
-        NodePointer y = x->left;
-        x->left = y->right;
-        if (y->right != T_nill)
-            y->right->parent = x;
-        y->parent = x->parent;
-        if (x->parent == nullptr)
-            this->root = y;
-        else if (x == x->parent->right)
-            x->parent->right = y;
-        else
-            x->parent->left = y;
-        y->right = x;
-        x->parent = y;
-    }
-
-    // Insert node
-    void RBInsert(int key) {
-        auto node = new Node;
-        node->parent = nullptr;
-        node->key = key;
-        node->left = T_nill;
-        node->right = T_nill;
-        node->color = 1; // node must be red
-
-        NodePointer y = nullptr;
-        NodePointer x = this->root;
-
-        while (x != T_nill) {
-            y = x;
-            if (node->key < x->key)
-                x = x->left;
-            else
-                x = x->right;
-        }
-
-        node->parent = y;
-        if (y == nullptr)
-            root = node;
-        else if (node->key < y->key)
-            y->left = node;
-        else
-            y->right = node;
-
-        if (node->parent == nullptr) {
-            node->color = 0;
-            return;
-        }
-
-        if (node->parent->parent == nullptr) return;
-
-        RBInsertFixUp(node);
-    }
-
-    // Transplant
-    void RBTransplant(NodePointer u, NodePointer v) {
-        if (u->parent == nullptr)
-            this->root = v;
-        else if (u == u->parent->left)
-            u->parent->left = v;
-        else
-            u->parent->right = v;
-
-        v->parent = u->parent;
-    }
-
-    // Delete node
-    void RBDelete(int key) {
-        NodePointer x, y, z = T_nill;
-        NodePointer root_copy = this->root;
-
-        // Because through our program we send in our key of the node we still need to first check if the node is present in the tree at all
-        // Technically we can also send a whole node, to first initialize that node but it is pattern breaking
-        while (root_copy != T_nill) {
-            if (root_copy->key == key)
-                z = root_copy;
-
-            if (root_copy->key <= key)
-                root_copy = root_copy->right;
-            else
-                root_copy = root_copy->left;
-        }
-
-        if (z == T_nill) {
-            cout << "The key isn't present, nothing to delete!" << endl;
-            return;
-        }
-
-        y = z;
-        char y_original_color = y->color;
-        if (z->left == T_nill) {
+    void rbDelete(Node<type>* z) {
+        Node<type>* x;
+        Node<type>* y = z;
+        Color orig_col = y->color;
+        if(z->left == nullptr) {
             x = z->right;
-            RBTransplant(z, z->right);
-        } else if (z->right == T_nill) {
+            RBTransplant(this->root, z, z->right);
+        } else if(z->right == nullptr) {
             x = z->left;
-            RBTransplant(z, z->left);
+            RBTransplant(this->root, z, z->left);
         } else {
             y = tree_minimum(z->right);
-            y_original_color = y->color;
+            orig_col = y->color;
             x = y->right;
-            if (y->parent == z)
-                x->parent = y;
+            if(y->parent == z && x != nullptr) x->parent = y;
             else {
-                RBTransplant(y, y->right);
+                RBTransplant(this->root, y, y->right);
                 y->right = z->right;
-                y->right->parent = y;
+                if(y->right != nullptr) y->right->parent = y;
             }
-
-            RBTransplant(z, y);
-            y->left = z->left;
-            y->left->parent = y;
+            RBTransplant(this->root, z, y);
+            y->left  = z->left;
+            if(y->left != nullptr) y->left->parent = y;
             y->color = z->color;
         }
+        if(orig_col == BLACK) RBDeleteFixup(x);
 
+        z->right = nullptr;
+        z->left = nullptr;
         delete z;
-        if (y_original_color == 0) RBDeleteFixup(x);
     }
 
-    // find the node with the tree_minimum key
-    NodePointer tree_minimum(NodePointer node) {
-        while (node->left != T_nill) node = node->left;
-        return node;
+    void findNode(Node<type> * cvor, type value) {
+        if(cvor == nullptr) return;
+
+        if(cvor->data == value) {
+            rbDelete(cvor);
+            return;
+        }
+        if(value < cvor->data) findNode(cvor->left, value);
+        else findNode(cvor->right, value);
     }
 };
 
+
 int main() {
+    RBStablo<int> stablo;
+
     cout << "Welcome to the RED-BLACK TREE interface menu!" << endl;
     cout << "You will be given different commands that you can choose and perform different actions on the tree!" << endl;
 
     // Menu options, tree and node for insertion and deletion
-    int menu_option = 0, node_number = 0;
+    int menu_option, node_number = 0;
     string menu_options[4] = {"Node insertion!", "Inorder output!", "Delete node", "EXIT"};
-    RBStablo red_black_tree;
+    RBStablo<int> red_black_tree;
 
     cout << "If you want the tree to have an initial structure of nodes [6, 11, 10, 2, 9, 7, 5, 13, 22, 27, 36, 12, 31] type in 1 or type in anything else to omit starting input!" << endl;
     cout << "Input: ";
@@ -317,9 +319,11 @@ int main() {
     if(menu_option == 1) {
         cout << "If you want to have a standard deletion of nodes [5, 27, 36, 12, 11] type in 1 or type in anything else to omit starting deletion!" << endl;
         cout << "Input: ";
-        menu_option = 0;
-        cin >> menu_option;
-        if(menu_option == 1) {
+        int menu_option2;
+        cin.clear();
+        cin.ignore();
+        cin >> menu_option2;
+        if(menu_option2 == 1) {
             // Starting tree input
             red_black_tree.RBDelete(5);
             red_black_tree.RBDelete(27);
@@ -334,11 +338,15 @@ int main() {
         cout << endl << "Menu:" << endl;
         for(int i = 0; i < 4; ++i)
             cout << i+1 << ". " << menu_options[i] << endl;
+        cin.clear();
+        cin.ignore();
         cin >> menu_option;
         switch(menu_option) {
             case 1:
                 cout << "You have chosen node insertion!" << endl;
                 cout << "Type in a key to insert" << endl;
+                cin.clear();
+                cin.ignore();
                 cin >> node_number;
                 cout << "You have chosen " << node_number << "!" << endl;
                 red_black_tree.RBInsert(node_number);
@@ -350,6 +358,8 @@ int main() {
             case 3:
                 cout << "You have chosen deleting a node!" << endl;
                 cout << "Type in a key to delete" << endl;
+                cin.clear();
+                cin.ignore();
                 cin >> node_number;
                 cout << "You have chosen " << node_number << "!" << endl;
                 red_black_tree.RBDelete(node_number);
