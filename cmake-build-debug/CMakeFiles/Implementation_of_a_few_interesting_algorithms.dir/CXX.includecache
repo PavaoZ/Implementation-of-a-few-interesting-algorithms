@@ -9,8 +9,8 @@
 /cygdrive/c/Users/User/Desktop/Implementation-of-a-few-interesting-algorithms/main.cpp
 iostream
 -
-cmath
+vector
 -
-cstdlib
+cmath
 -
 
